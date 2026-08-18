@@ -1111,7 +1111,7 @@
   var CLIENT_ID="503476708241-186q0eebosv0a8u3563shjrphg89vhn2.apps.googleusercontent.com";
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
-  function startPolling(){ if(booted)return; booted=true; setInterval(poll,30000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
+  function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
   function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
