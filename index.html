@@ -188,8 +188,10 @@
   tbody tr.main:hover{background:var(--surface-2)}
   .c-item{max-width:340px}
   .c-item .title{font-weight:600; letter-spacing:-.01em; color:var(--ink)}
-  .c-item .meta{font-size:11px; color:var(--ink-3); margin-top:4px; font-variant-numeric:tabular-nums}
+  .c-item .meta{font-size:11px; color:var(--ink-3); margin-top:4px; padding-left:9px; font-variant-numeric:tabular-nums}
   .c-item .meta.metasub{margin-top:1px}
+  .cell-date{min-width:140px}
+  .cell-date.overdue{color:var(--s-red-fg); border-color:var(--s-red-fg); font-weight:600}
   .c-owner{white-space:nowrap; color:var(--ink)}
   .c-due{white-space:nowrap; color:var(--ink-2); font-variant-numeric:tabular-nums; font-size:12.5px}
   .c-notes{max-width:280px; color:var(--ink-2); font-size:12.5px}
@@ -742,13 +744,19 @@
     var rows=ls.map(function(u,idx){var su=safeUrl(u);return '<div class="illine"><input class="il-url" data-id="'+esc(x.id)+'" data-idx="'+idx+'" type="url" placeholder="https://…" value="'+esc(u||"")+'"><a class="il-open" href="'+esc(su||"#")+'" target="_blank" rel="noopener noreferrer" title="open" style="'+(su?"":"display:none")+'">↗</a><button class="il-rm" data-id="'+esc(x.id)+'" data-idx="'+idx+'" title="Remove link" aria-label="Remove link">✕</button></div>';}).join("");
     return '<div class="illinks">'+rows+'<button class="il-add" data-id="'+esc(x.id)+'">＋ link</button></div>';
   }
+  function isValidDate(s){return /^\d{4}-\d{2}-\d{2}$/.test(s||"");}
+  function dueCell(x){
+    var d=isValidDate(x.due)?x.due:"";
+    var over=d && d<today() && isOpen(x);
+    return '<input class="cellin cell-date'+(over?" overdue":"")+'" type="date" data-kind="item" data-id="'+esc(x.id)+'" data-f="due" value="'+d+'" title="'+(over?"Overdue":"Due date")+'">';
+  }
   function rowItem(x){
     return '<tr class="main" data-kind="item" data-id="'+esc(x.id)+'">'+
       '<td class="c-item"><input class="cellin cell-title" data-kind="item" data-id="'+esc(x.id)+'" data-f="item" value="'+esc(x.item||"")+'" placeholder="Action item">'+metaLine(x)+'</td>'+
       '<td>'+cellIn("item",x.id,"owner",x.owner,"Owner")+'</td>'+
       '<td>'+prioSel("item",x.id,x.priority)+'</td>'+
       '<td>'+statusControl(x,"item")+'</td>'+
-      '<td>'+cellIn("item",x.id,"due",x.due,"Due")+'</td>'+
+      '<td>'+dueCell(x)+'</td>'+
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="item" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea>'+linksEditor(x)+'</td>'+
       '<td class="c-actions"><button class="icon-btn" data-del="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
@@ -1064,6 +1072,7 @@
   document.getElementById("rows").addEventListener("change",function(e){
     var vst=e.target.closest(".vi-status");if(vst){var s1=findMV(vst);if(s1.v){s1.v.status=vst.value;stamp(s1.m);saveAll();}return;}
     var vdt=e.target.closest(".vi-date");if(vdt){var sd=findMV(vdt);if(sd.v){sd.v.date=vdt.value;stamp(sd.m);saveAll();if(view==="cal")render();}return;}
+    var cd=e.target.closest(".cell-date");if(cd){var rd=findRec(cd);if(rd){rd[cd.getAttribute("data-f")]=cd.value;stamp(rd);saveAll();render();}return;}
     var cs=e.target.closest(".cellsel");if(cs){var rc=findRec(cs);if(rc){rc[cs.getAttribute("data-f")]=cs.value;stamp(rc);saveAll();render();}return;}
     var ss=e.target.closest(".st-sel");if(ss){var r2=findRec(ss);if(r2){r2.status=ss.value;stamp(r2);saveAll();render();}return;}
   });
