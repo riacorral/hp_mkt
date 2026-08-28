@@ -205,6 +205,9 @@
   .tablescroll{overflow-x:auto}
   table{width:100%; border-collapse:collapse; min-width:900px}
   thead th{position:sticky; top:0; background:var(--surface-2); text-align:left; font-size:11px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-2); padding:11px 14px; border-bottom:1px solid var(--border); white-space:nowrap; z-index:5}
+  thead th.sortable{cursor:pointer; user-select:none}
+  thead th.sortable:hover{color:var(--ink)}
+  .sarr{margin-left:4px; font-size:9px; color:var(--accent); vertical-align:1px}
   tbody td{padding:13px 14px; border-bottom:1px solid var(--border); vertical-align:top}
   tbody tr.main:hover{background:var(--surface-2)}
   .c-item{max-width:340px}
@@ -703,6 +706,7 @@
 
   // ---- state ----
   var view="items"; // "items" | "merch"
+  var sort={items:null, merch:null, vids:null}; // {key,dir:1|-1} or null
   var filters={q:"",status:"__open__",prio:"",country:"",owner:"",channel:""};
   var expanded={};
 
@@ -764,8 +768,39 @@
       '<select class="st-sel" data-kind="'+kind+'" data-id="'+esc(x.id)+'" aria-label="Change status">'+opts+'</select></span>';
   }
 
+  // ---- sorting ----
+  function sarrow(v,key){var s=sort[v]; return (s&&s.key===key)?'<span class="sarr">'+(s.dir>0?"▲":"▼")+'</span>':'';}
+  function sth(v,key,label,style){return '<th class="sortable" data-sk="'+key+'"'+(style?' style="'+style+'"':'')+'>'+label+sarrow(v,key)+'</th>';}
+  function stRank(s){var i=STATUSES.map(function(x){return x.label;}).indexOf(s);return i<0?99:i;}
+  function vsRank(s){var i=VIDEO_STATUSES.map(function(x){return x.label;}).indexOf(s);return i<0?99:i;}
+  function cmpText(a,b){a=(a==null?"":String(a)).toLowerCase();b=(b==null?"":String(b)).toLowerCase();return a<b?-1:a>b?1:0;}
+  function sortVal(v,key,rec){
+    if(v==="vids"){var m=rec.m,vv=rec.v;
+      if(key==="merchant")return {t:"s",v:m.merchant}; if(key==="owner")return {t:"s",v:m.owner};
+      if(key==="country")return {t:"s",v:m.country}; if(key==="status")return {t:"n",v:vsRank(vv.status)};
+      if(key==="date")return {t:"d",v:vv.date};
+    } else {
+      if(key==="item")return {t:"s",v:rec.item}; if(key==="merchant")return {t:"s",v:rec.merchant};
+      if(key==="owner")return {t:"s",v:rec.owner}; if(key==="country")return {t:"s",v:rec.country};
+      if(key==="priority")return {t:"n",v:PRIOS.indexOf(rec.priority)}; if(key==="status")return {t:"n",v:stRank(rec.status)};
+      if(key==="due")return {t:"d",v:rec.due};
+    }
+    return {t:"s",v:""};
+  }
+  function sortList(list){
+    var s=sort[view]; if(!s) return list;
+    var arr=list.slice();
+    arr.sort(function(a,b){
+      var va=sortVal(view,s.key,a), vb=sortVal(view,s.key,b), r;
+      if(va.t==="d"){ var ea=!va.v, eb=!vb.v; if(ea&&eb)return 0; if(ea)return 1; if(eb)return -1; r=(va.v<vb.v?-1:va.v>vb.v?1:0); }
+      else if(va.t==="n"){ r=(va.v-vb.v); }
+      else { r=cmpText(va.v,vb.v); }
+      return s.dir>0?r:-r;
+    });
+    return arr;
+  }
   // ---- item table ----
-  function thItems(){return '<tr><th style="width:28%">Action item</th><th>Owner</th><th>Priority</th><th>Status</th><th>Due</th><th style="width:26%">Notes &amp; reference link</th><th style="text-align:right">Actions</th></tr>';}
+  function thItems(){return '<tr>'+sth("items","item","Action item",'width:28%')+sth("items","owner","Owner")+sth("items","priority","Priority")+sth("items","status","Status")+sth("items","due","Due")+'<th style="width:26%">Notes &amp; reference link</th><th style="text-align:right">Actions</th></tr>';}
   var LINKSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
   function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:merch;return arr.filter(function(r){return r.id===id;})[0];}
   function cellIn(kind,id,f,val,ph){return '<input class="cellin" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" value="'+esc(val==null?"":val)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(f==="country"?' list="countryList"':(f==="owner"?' list="ownerList"':''))+'>';}
@@ -804,7 +839,7 @@
   }
 
   // ---- merchant table ----
-  function thMerch(){return '<tr><th class="c-exp"></th><th style="width:20%">Merchant</th><th>Owner</th><th>Priority</th><th>Status</th><th>Country</th><th style="width:22%">Notes</th><th>Drive</th><th>Script</th><th style="text-align:right">Actions</th></tr>';}
+  function thMerch(){return '<tr><th class="c-exp"></th>'+sth("merch","merchant","Merchant",'width:20%')+sth("merch","owner","Owner")+sth("merch","priority","Priority")+sth("merch","status","Status")+sth("merch","country","Country")+'<th style="width:22%">Notes</th><th>Drive</th><th>Script</th><th style="text-align:right">Actions</th></tr>';}
   function chanChip(code){var name=(CHANNELS.filter(function(c){return c.code===code;})[0]||{}).name||code; return '<span class="chan '+esc(code)+'" title="'+esc(name)+'">'+esc(code)+'</span>';}
   var CH_CARET='<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg>';
   function chanChipsOnly(v){return (v.channels&&v.channels.length)?v.channels.map(function(c){return chanChip(c);}).join(" "):'<span class="chanplace">＋ Channels</span>';}
@@ -850,7 +885,7 @@
   }
 
   // ---- all videos sheet ----
-  function thVids(){return '<tr><th style="width:22%">Merchant</th><th>Owner</th><th>Country</th><th>Channels</th><th>Status</th><th>Schedule</th><th>Notes</th><th>Link</th><th style="text-align:right"></th></tr>';}
+  function thVids(){return '<tr>'+sth("vids","merchant","Merchant",'width:22%')+sth("vids","owner","Owner")+sth("vids","country","Country")+'<th>Channels</th>'+sth("vids","status","Status")+sth("vids","date","Schedule")+'<th>Notes</th><th>Link</th><th style="text-align:right"></th></tr>';}
   function allVideos(){var out=[];merch.forEach(function(m){(m.videos||[]).forEach(function(v){out.push({v:v,m:m});});});return out;}
   function videoMatches(row){
     var m=row.m,v=row.v;
@@ -909,6 +944,7 @@
     var list, rowFn;
     if(isVids){ list=allVideos().filter(videoMatches); rowFn=rowVideo; }
     else { list=currentList().filter(matches); rowFn=(view==="items"?rowItem:rowMerch); }
+    list=sortList(list);
     document.getElementById("empty").style.display=list.length?"none":"block";
     document.getElementById("emptySub").textContent = hasActiveFilters()?"Try clearing filters.":(isVids?"No final videos yet — add them under a merchant in Merchant content.":"Create a new entry to get started.");
     tb.innerHTML = list.map(rowFn).join("");
@@ -1185,6 +1221,13 @@
   document.getElementById("fCountry").addEventListener("change",function(){filters.country=this.value;render();});
   document.getElementById("clearBtn").addEventListener("click",function(){filters={q:"",status:defaultStatus(view),prio:"",country:"",owner:"",channel:""};document.getElementById("search").value="";document.getElementById("fPrio").value="";document.getElementById("fCountry").value="";document.getElementById("fOwner").value="";document.getElementById("fChannel").value="";render();});
 
+  document.getElementById("thead").addEventListener("click",function(e){
+    var th=e.target.closest(".sortable"); if(!th)return;
+    var key=th.getAttribute("data-sk"), cur=sort[view];
+    if(cur&&cur.key===key){ if(cur.dir>0){cur.dir=-1;} else { sort[view]=null; } }
+    else { sort[view]={key:key,dir:1}; }
+    render();
+  });
   document.addEventListener("click",function(){closeChanPop();closeOwnerPop();});
   document.getElementById("bugBtn").addEventListener("click",function(){document.getElementById("bugOverlay").classList.add("open");renderBugs();setTimeout(function(){document.getElementById("bugText").focus();},40);});
   document.getElementById("bugClose").addEventListener("click",function(){document.getElementById("bugOverlay").classList.remove("open");});
