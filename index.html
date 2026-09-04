@@ -132,6 +132,10 @@
   .card.view-merch thead th{background:var(--s-teal-bg)}
   .tabs-merch .tab.active{color:var(--s-teal-fg); border-bottom-color:var(--s-teal-fg)}
   .tabs-merch .tab.active .cnt{background:var(--s-teal-bg); color:var(--s-teal-fg)}
+  .card.view-events{border-top-color:var(--s-blue-fg)}
+  .card.view-events thead th{background:var(--s-blue-bg)}
+  .tabs-events .tab.active{color:var(--s-blue-fg); border-bottom-color:var(--s-blue-fg)}
+  .tabs-events .tab.active .cnt{background:var(--s-blue-bg); color:var(--s-blue-fg)}
   .tabs-cal .tab.active{color:var(--s-violet-fg); border-bottom-color:var(--s-violet-fg)}
   .tabs-cal .tab.active .cnt{background:var(--s-violet-bg); color:var(--s-violet-fg)}
   .tabs-vids .tab.active{color:var(--s-amber-fg); border-bottom-color:var(--s-amber-fg)}
@@ -293,8 +297,8 @@
   .m-open:hover{text-decoration:underline}
   .vidrm{color:var(--danger)}
   .vidrm:hover{background:var(--danger-soft); border-color:transparent}
-  .addvidinline{margin-top:12px; font-size:12.5px; border:1px dashed var(--border-strong); background:transparent}
-  .addvidinline:hover{border-color:var(--accent); color:var(--accent)}
+  .addvidinline,.addtaskinline{margin-top:12px; font-size:12.5px; border:1px dashed var(--border-strong); background:transparent}
+  .addvidinline:hover,.addtaskinline:hover{border-color:var(--accent); color:var(--accent)}
 
   .chanpick{display:inline-flex; align-items:center; gap:5px; flex-wrap:wrap; width:100%; min-width:120px; min-height:32px; border:1px solid var(--border-strong); background:var(--surface-2); border-radius:4px; padding:5px 8px; font-size:11px; cursor:pointer; justify-content:flex-start}
   .chanpick:hover{border-color:var(--ink-3)}
@@ -631,7 +635,7 @@
     }
   }
 
-  var items=[], merch=[];
+  var items=[], merch=[], events=[];
   var API="/api/data";
   var serverRev=-1, saveTimer=null, lastMutation=0, lastSync=0, syncTimer=null;
   function updateSyncLabel(){var el=document.getElementById("syncLabel");if(!el)return;if(!lastSync){el.textContent="connecting…";return;}var s=Math.round((Date.now()-lastSync)/1000);el.textContent=s<3?"synced just now":s<60?("synced "+s+"s ago"):("synced "+Math.round(s/60)+"m ago");}
@@ -639,27 +643,34 @@
     var it=seedItems(), mr=seedMerch();
     ADD_MERCH_A11.slice().reverse().forEach(function(m){mr.unshift(JSON.parse(JSON.stringify(m)));});
     ADD_ITEMS_A11.slice().reverse().forEach(function(i){it.unshift(JSON.parse(JSON.stringify(i)));});
-    return {items:it, merch:mr, bugs:[]};
+    return {items:it, merch:mr, bugs:[], events:[]};
   }
   function normalizeState(){
     merch.forEach(function(m,i){m.videos=(Array.isArray(m.videos)?m.videos:[]).map(function(v,j){return normVideo(v,i,j);});});
     items.forEach(function(x){if(!x.added)x.added=x.updated||"—"; if(x.addedBy===undefined)x.addedBy=""; if(x.updatedBy===undefined)x.updatedBy=""; if(!Array.isArray(x.links))x.links=x.link?[String(x.link)]:[];});
     var CNORM={"philippines":"PH","singapore":"SG","malaysia":"MY","ph":"PH","sg":"SG","my":"MY"};
     merch.forEach(function(x){if(!x.added)x.added=x.updated||"—"; if(x.addedBy===undefined)x.addedBy=""; if(x.updatedBy===undefined)x.updatedBy=""; if(x.scriptLink===undefined)x.scriptLink=""; if(x.country){var c=CNORM[String(x.country).trim().toLowerCase()]; if(c)x.country=c;}});
+    events.forEach(function(e){
+      e.tasks=(Array.isArray(e.tasks)?e.tasks:[]).map(function(t){return {id:t.id||uid("t"),task:String(t.task||""),owner:String(t.owner||""),status:t.status||"Not started",due:String(t.due||""),notes:String(t.notes||"")};});
+      if(e.event===undefined)e.event=String(e.name||"");
+      if(!e.added)e.added=e.updated||"—"; if(e.addedBy===undefined)e.addedBy=""; if(e.updatedBy===undefined)e.updatedBy="";
+      if(e.priority===undefined)e.priority="Medium"; if(e.status===undefined)e.status="Not started"; if(e.notes===undefined)e.notes="";
+      if(e.country){var ec=CNORM[String(e.country).trim().toLowerCase()]; if(ec)e.country=ec;}
+    });
   }
-  function applyServer(st){ items=Array.isArray(st.items)?st.items:[]; merch=Array.isArray(st.merch)?st.merch:[]; bugs=Array.isArray(st.bugs)?st.bugs:[]; if(typeof st.rev==="number")serverRev=st.rev; normalizeState(); }
+  function applyServer(st){ items=Array.isArray(st.items)?st.items:[]; merch=Array.isArray(st.merch)?st.merch:[]; bugs=Array.isArray(st.bugs)?st.bugs:[]; events=Array.isArray(st.events)?st.events:[]; if(typeof st.rev==="number")serverRev=st.rev; normalizeState(); }
   function loadAll(done){
     fetch(API,{cache:"no-store"}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(st){
       if(st===null) return;
       lastSync=Date.now();
-      if(st && st.empty){ var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; normalizeState(); saveNow(); }
+      if(st && st.empty){ var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; events=s.events; normalizeState(); saveNow(); }
       else { applyServer(st); }
       if(done)done();
-    }).catch(function(){ var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; normalizeState(); if(done)done(); toast("Offline — showing a local copy; changes may not sync.",true); });
+    }).catch(function(){ var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; events=s.events; normalizeState(); if(done)done(); toast("Offline — showing a local copy; changes may not sync.",true); });
   }
   function saveNow(){
     lastMutation=Date.now();
-    return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items,merch:merch,bugs:bugs})}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(res){ if(res){ lastSync=Date.now(); if(typeof res.rev==="number")serverRev=res.rev; } }).catch(function(){ toast("Save failed — check your connection.",true); });
+    return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items,merch:merch,bugs:bugs,events:events})}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(res){ if(res){ lastSync=Date.now(); if(typeof res.rev==="number")serverRev=res.rev; } }).catch(function(){ toast("Save failed — check your connection.",true); });
   }
   function saveAll(){ lastMutation=Date.now(); if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(function(){saveTimer=null;saveNow();},350); }
   function isBusyUI(){ if(document.querySelector(".overlay.open"))return true; if(document.querySelector(".chanpop.open"))return true; var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return true; return saveTimer!==null; }
@@ -706,20 +717,20 @@
 
   // ---- state ----
   var view="items"; // "items" | "merch"
-  var sort={items:null, merch:null, vids:null}; // {key,dir:1|-1} or null
+  var sort={items:null, merch:null, vids:null, events:null}; // {key,dir:1|-1} or null
   var filters={q:"",status:"__open__",prio:"",country:"",owner:"",channel:""};
   var expanded={};
 
-  function currentList(){return view==="items"?items:merch;}
+  function currentList(){return view==="items"?items:view==="events"?events:merch;}
   function isOpen(x){return x.status!=="Done"&&x.status!=="On hold";}
   function defaultStatus(v){return v==="items"?"__open__":"";}
-  function hasActiveFilters(){return !!(filters.q||filters.prio||filters.owner||filters.channel||((view==="merch"||view==="vids")&&filters.country)||(filters.status&&filters.status!==defaultStatus(view)));}
+  function hasActiveFilters(){return !!(filters.q||filters.prio||filters.owner||filters.channel||((view==="merch"||view==="vids"||view==="events")&&filters.country)||(filters.status&&filters.status!==defaultStatus(view)));}
   function ownersOf(x){return String(x.owner||"").split(",").map(function(s){return s.trim();}).filter(Boolean);}
 
   function scheduledCount(all){var n=0;merch.forEach(function(m){(m.videos||[]).forEach(function(v){if(all||v.date)n++;});});return n;}
   function renderTabs(){
-    var el=document.getElementById("tabs"); el.innerHTML=""; el.className="tabs "+(view==="items"?"tabs-items":view==="merch"?"tabs-merch":view==="vids"?"tabs-vids":view==="report"?"tabs-report":"tabs-cal");
-    [{k:"items",l:"Action items",n:items.length},{k:"merch",l:"Merchant content",n:merch.length},{k:"vids",l:"All videos",n:scheduledCount(true)},{k:"cal",l:"Content calendar",n:scheduledCount()},{k:"report",l:"Analytics",n:null}].forEach(function(t){
+    var el=document.getElementById("tabs"); el.innerHTML=""; el.className="tabs "+(view==="items"?"tabs-items":view==="merch"?"tabs-merch":view==="vids"?"tabs-vids":view==="events"?"tabs-events":view==="report"?"tabs-report":"tabs-cal");
+    [{k:"items",l:"Action items",n:items.length},{k:"merch",l:"Merchant content",n:merch.length},{k:"events",l:"Events",n:events.length},{k:"vids",l:"All videos",n:scheduledCount(true)},{k:"cal",l:"Content calendar",n:scheduledCount()},{k:"report",l:"Analytics",n:null}].forEach(function(t){
       var b=document.createElement("button");
       b.className="tab"+(view===t.k?" active":""); b.setAttribute("role","tab"); b.setAttribute("aria-selected",view===t.k?"true":"false");
       b.innerHTML=esc(t.l)+(t.n===null?'':' <span class="cnt">'+t.n+'</span>');
@@ -733,7 +744,7 @@
     var list=currentList();
     var defs=[ view==="items"
       ? {key:"__open__",label:"Open items",n:list.filter(isOpen).length}
-      : {key:"",label:"All merchants",n:list.length} ];
+      : {key:"",label:view==="events"?"All events":"All merchants",n:list.length} ];
     ["In progress","Blocked","Not started","Done"].forEach(function(s){
       defs.push({key:s,label:s,n:list.filter(function(x){return x.status===s;}).length});
     });
@@ -750,11 +761,12 @@
     else if(filters.status && x.status!==filters.status) return false;
     if(filters.prio && x.priority!==filters.prio) return false;
     if(filters.owner && ownersOf(x).indexOf(filters.owner)<0) return false;
-    if(view==="merch" && filters.country && x.country!==filters.country) return false;
+    if((view==="merch"||view==="events") && filters.country && x.country!==filters.country) return false;
     if(view==="merch" && filters.channel && !(x.videos||[]).some(function(v){return (v.channels||[]).indexOf(filters.channel)>=0;})) return false;
     if(filters.q){
       var q=filters.q.toLowerCase(), hay;
       if(view==="items") hay=(x.item+" "+x.owner+" "+x.notes+" "+x.due+" "+x.status);
+      else if(view==="events") hay=(x.event+" "+x.owner+" "+x.country+" "+x.notes+" "+x.date+" "+x.status+" "+(x.tasks||[]).map(function(t){return t.task+" "+t.owner+" "+t.notes;}).join(" "));
       else hay=(x.merchant+" "+x.owner+" "+x.country+" "+x.notes+" "+x.due+" "+x.status+" "+(x.videos||[]).map(function(v){return (v.channels||[]).join(" ")+" "+v.notes;}).join(" "));
       if(hay.toLowerCase().indexOf(q)<0) return false;
     }
@@ -781,6 +793,7 @@
       if(key==="date")return {t:"d",v:vv.date};
     } else {
       if(key==="item")return {t:"s",v:rec.item}; if(key==="merchant")return {t:"s",v:rec.merchant};
+      if(key==="event")return {t:"s",v:rec.event}; if(key==="date")return {t:"d",v:rec.date};
       if(key==="owner")return {t:"s",v:rec.owner}; if(key==="country")return {t:"s",v:rec.country};
       if(key==="priority")return {t:"n",v:PRIOS.indexOf(rec.priority)}; if(key==="status")return {t:"n",v:stRank(rec.status)};
       if(key==="due")return {t:"d",v:rec.due};
@@ -802,10 +815,10 @@
   // ---- item table ----
   function thItems(){return '<tr>'+sth("items","item","Action item",'width:28%')+sth("items","owner","Owner")+sth("items","priority","Priority")+sth("items","status","Status")+sth("items","due","Due")+'<th style="width:26%">Notes &amp; reference link</th><th style="text-align:right">Actions</th></tr>';}
   var LINKSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
-  function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:merch;return arr.filter(function(r){return r.id===id;})[0];}
+  function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:kind==="event"?events:merch;return arr.filter(function(r){return r.id===id;})[0];}
   function cellIn(kind,id,f,val,ph){return '<input class="cellin" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" value="'+esc(val==null?"":val)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(f==="country"?' list="countryList"':(f==="owner"?' list="ownerList"':''))+'>';}
   function prioSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="priority">'+PRIOS.map(function(p){return '<option'+(p===val?" selected":"")+'>'+esc(p)+'</option>';}).join("")+'</select>';}
-  function ownerNamesAll(){var s=[];items.concat(merch).forEach(function(x){String(x.owner||"").split(",").map(function(t){return t.trim();}).forEach(function(n){if(n&&s.indexOf(n)<0)s.push(n);});});s.sort();return s;}
+  function ownerNamesAll(){var s=[];items.concat(merch).concat(events).forEach(function(x){String(x.owner||"").split(",").map(function(t){return t.trim();}).forEach(function(n){if(n&&s.indexOf(n)<0)s.push(n);});});s.sort();return s;}
   function ownerCaret(){return '<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg>';}
   function ownerCell(kind,id,val){var names=String(val||"").split(",").map(function(s){return s.trim();}).filter(Boolean);return '<button type="button" class="ownerpick" data-kind="'+kind+'" data-id="'+esc(id)+'">'+(names.length?esc(names.join(", ")):'<span class="chanplace">Owner</span>')+ownerCaret()+'</button>';}
   function metaLine(x,extra){return '<div class="meta">added '+esc(x.added||"—")+(x.addedBy?' by '+esc(x.addedBy):'')+'</div><div class="meta metasub">updated '+esc(x.updated||"—")+(x.updatedBy?' by '+esc(x.updatedBy):'')+(extra||"")+'</div>';}
@@ -912,6 +925,46 @@
     '</tr>';
   }
 
+  // ---- events table ----
+  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:22%')+sth("events","owner","Owner")+sth("events","priority","Priority")+sth("events","status","Status")+sth("events","date","Date")+sth("events","country","Country")+'<th style="width:24%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function eventDateCell(x){var d=isValidDate(x.date)?x.date:"";var over=d && d<today() && isOpen(x);return '<div class="datewrap">'+(over?'<span class="odflag" title="Passed">⚠</span>':'')+'<input class="cellin cell-date'+(over?" overdue":"")+'" type="date" data-kind="event" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'" title="'+(over?"Event date passed":"Event date")+'"></div>';}
+  var TASKDEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
+  function tasksPanel(x){
+    var rows=(x.tasks||[]).map(function(t){
+      var st=STATUSES.map(function(s){return '<option'+(s.label===t.status?" selected":"")+'>'+esc(s.label)+'</option>';}).join("");
+      var over=isValidDate(t.due)&&t.due<today()&&t.status!=="Done"&&t.status!=="On hold";
+      return '<tr data-tid="'+esc(t.id)+'">'+
+        '<td><textarea class="tk-task celltxt" placeholder="Task / deliverable">'+esc(t.task||"")+'</textarea></td>'+
+        '<td style="width:150px"><input class="tk-owner cellin" list="ownerList" placeholder="Owner" value="'+esc(t.owner||"")+'"></td>'+
+        '<td style="width:140px"><select class="tk-status cellsel">'+st+'</select></td>'+
+        '<td style="width:160px"><div class="datewrap">'+(over?'<span class="odflag" title="Overdue">⚠</span>':'')+'<input class="tk-due cellin cell-date'+(over?" overdue":"")+'" type="date" value="'+(isValidDate(t.due)?t.due:"")+'"></div></td>'+
+        '<td><textarea class="tk-notes celltxt" placeholder="Notes">'+esc(t.notes||"")+'</textarea></td>'+
+        '<td style="width:36px"><button class="taskrm icon-btn" title="Remove task" aria-label="Remove task">'+TASKDEL+'</button></td>'+
+      '</tr>';
+    }).join("");
+    var body=rows||'<tr><td colspan="6" class="novids">No tasks yet — add one below.</td></tr>';
+    return '<div class="vidpanel" data-eid="'+esc(x.id)+'"><table class="vids editvids"><thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Due</th><th>Notes</th><th></th></tr></thead><tbody>'+body+'</tbody></table>'+
+      '<button class="addtaskinline" data-eid="'+esc(x.id)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add task</button></div>';
+  }
+  function rowEvent(x){
+    var open=!!expanded[x.id];
+    var tc=(x.tasks||[]).length;
+    var main='<tr class="main" data-kind="event" data-id="'+esc(x.id)+'">'+
+      '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
+      '<td class="c-item"><textarea class="cellin cell-title" data-kind="event" data-id="'+esc(x.id)+'" data-f="event" rows="1" placeholder="Event name">'+esc(x.event||"")+'</textarea>'+metaLine(x,tc?' · '+tc+' task'+(tc>1?"s":""):"")+'</td>'+
+      '<td>'+ownerCell("event",x.id,x.owner)+'</td>'+
+      '<td>'+prioSel("event",x.id,x.priority)+'</td>'+
+      '<td>'+statusControl(x,"event")+'</td>'+
+      '<td>'+eventDateCell(x)+'</td>'+
+      '<td>'+cellIn("event",x.id,"country",x.country,"Country")+'</td>'+
+      '<td class="c-notes"><textarea class="cellin celltxt" data-kind="event" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
+      '<td class="c-actions"><button class="icon-btn" data-edel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
+    '</tr>';
+    var sub= open? '<tr class="subrow"><td colspan="9"><div class="subwrap"><div class="subhead">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
+    return main+sub;
+  }
+  function findET(el){var ee=el.closest("[data-eid]");var eid=ee?ee.getAttribute("data-eid"):null;var tr=el.closest("[data-tid]");var tid=tr?tr.getAttribute("data-tid"):null;var ev=events.filter(function(z){return z.id===eid;})[0];var t=(ev&&tid)?(ev.tasks||[]).filter(function(z){return z.id===tid;})[0]:null;return {e:ev,t:t};}
+
   function syncStatusFilter(){
     var fs=document.getElementById("fStatus");
     var opts=(view==="vids")?VIDEO_STATUSES:STATUSES;
@@ -921,8 +974,8 @@
   function render(){
     closeChanPop(); closeOwnerPop();
     renderTabs();
-    var isCal=(view==="cal"), isVids=(view==="vids"), isReport=(view==="report");
-    document.getElementById("stats").style.display=(view==="items"||view==="merch")?"":"none";
+    var isCal=(view==="cal"), isVids=(view==="vids"), isReport=(view==="report"), isEvents=(view==="events");
+    document.getElementById("stats").style.display=(view==="items"||view==="merch"||isEvents)?"":"none";
     document.querySelector(".toolbar").style.display=(isCal||isReport)?"none":"flex";
     document.getElementById("tableCard").style.display=(isCal||isReport)?"none":"";
     document.getElementById("calWrap").style.display=isCal?"":"none";
@@ -930,23 +983,23 @@
     document.getElementById("newBtn").style.display=(isCal||isVids||isReport)?"none":"";
     if(isCal){ renderCalendar(); return; }
     if(isReport){ renderReport(); return; }
-    if(view==="items"||view==="merch") renderStats();
-    document.getElementById("fPrio").style.display=(view==="items"||view==="merch")?"":"none";
-    document.getElementById("fCountry").style.display=(view==="merch"||isVids)?"":"none";
+    if(view==="items"||view==="merch"||isEvents) renderStats();
+    document.getElementById("fPrio").style.display=(view==="items"||view==="merch"||isEvents)?"":"none";
+    document.getElementById("fCountry").style.display=(view==="merch"||isVids||isEvents)?"":"none";
     document.getElementById("fChannel").style.display=(view==="merch"||isVids)?"":"none";
-    document.getElementById("tableCard").className="card "+(view==="items"?"view-items":isVids?"view-vids":"view-merch");
-    document.getElementById("newLabel").textContent = view==="items"?"New item":"New merchant";
-    document.getElementById("search").placeholder = view==="items"?"Search items, owners, notes…":isVids?"Search videos, merchants, channels…":"Search merchants, owners, videos…";
+    document.getElementById("tableCard").className="card "+(view==="items"?"view-items":isVids?"view-vids":isEvents?"view-events":"view-merch");
+    document.getElementById("newLabel").textContent = view==="items"?"New item":isEvents?"New event":"New merchant";
+    document.getElementById("search").placeholder = view==="items"?"Search items, owners, notes…":isVids?"Search videos, merchants, channels…":isEvents?"Search events, owners, tasks…":"Search merchants, owners, videos…";
     syncStatusFilter();
     document.getElementById("fChannel").value=filters.channel;
     var thead=document.getElementById("thead"), tb=document.getElementById("rows");
-    thead.innerHTML = view==="items"?thItems():isVids?thVids():thMerch();
+    thead.innerHTML = view==="items"?thItems():isVids?thVids():isEvents?thEvents():thMerch();
     var list, rowFn;
     if(isVids){ list=allVideos().filter(videoMatches); rowFn=rowVideo; }
-    else { list=currentList().filter(matches); rowFn=(view==="items"?rowItem:rowMerch); }
+    else { list=currentList().filter(matches); rowFn=(view==="items"?rowItem:isEvents?rowEvent:rowMerch); }
     list=sortList(list);
     document.getElementById("empty").style.display=list.length?"none":"block";
-    document.getElementById("emptySub").textContent = hasActiveFilters()?"Try clearing filters.":(isVids?"No final videos yet — add them under a merchant in Merchant content.":"Create a new entry to get started.");
+    document.getElementById("emptySub").textContent = hasActiveFilters()?"Try clearing filters.":(isVids?"No final videos yet — add them under a merchant in Merchant content.":isEvents?"Add an event to get started.":"Create a new entry to get started.");
     tb.innerHTML = list.map(rowFn).join("");
     sizeTitles();
     document.getElementById("clearBtn").style.display=hasActiveFilters()?"inline-flex":"none";
@@ -993,7 +1046,7 @@
   }
 
   function renderReport(){
-    var recs=items.concat(merch);
+    var recs=items.concat(merch).concat(events);
     function blank(){return {total:0,open:0,inprog:0,blocked:0,notstarted:0,done:0};}
     function tally(p,x){p.total++; if(isOpen(x))p.open++; if(x.status==="In progress")p.inprog++; if(x.status==="Blocked")p.blocked++; if(x.status==="Not started")p.notstarted++; if(x.status==="Done")p.done++;}
     var people={}, team=blank();
@@ -1011,8 +1064,10 @@
 
   function refreshOptions(){
     var owners=[],countries=[];
-    items.concat(merch).forEach(function(x){var o=x.owner||""; o.split(",").map(function(s){return s.trim();}).forEach(function(n){if(n&&owners.indexOf(n)<0)owners.push(n);});});
-    merch.forEach(function(x){if(x.country&&countries.indexOf(x.country)<0)countries.push(x.country);});
+    var pushName=function(n){n=(n||"").trim();if(n&&owners.indexOf(n)<0)owners.push(n);};
+    items.concat(merch).concat(events).forEach(function(x){String(x.owner||"").split(",").forEach(pushName);});
+    events.forEach(function(e){(e.tasks||[]).forEach(function(t){String(t.owner||"").split(",").forEach(pushName);});});
+    merch.concat(events).forEach(function(x){if(x.country&&countries.indexOf(x.country)<0)countries.push(x.country);});
     owners.sort(); countries.sort();
     var fo=document.getElementById("fOwner"),co=fo.value; fo.innerHTML='<option value="">All owners</option>'+owners.map(function(o){return '<option>'+esc(o)+'</option>';}).join(""); fo.value=co;
     var fs=document.getElementById("fStatus"),cs=fs.value; fs.innerHTML='<option value="">All statuses</option>'+STATUSES.map(function(s){return '<option>'+esc(s.label)+'</option>';}).join(""); fs.value=cs;
@@ -1095,6 +1150,8 @@
     saveAll();refreshOptions();render();closeMerch();
   }
   function delMerch(id){var x=merch.filter(function(m){return m.id===id;})[0];if(!x)return;askConfirm("Delete this merchant and its videos?",'"'+x.merchant+'"',function(){merch=merch.filter(function(m){return m.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Merchant deleted");},{danger:true,okLabel:"Delete"});}
+  function newEvent(){var e={id:uid("ev"),event:"",owner:"",priority:"Medium",status:"Not started",date:"",country:"",notes:"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};events.unshift(e);expanded[e.id]=true;saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="event"][data-id="'+e.id+'"]');if(ta)ta.focus();},50);}
+  function delEvent(id){var x=events.filter(function(e){return e.id===id;})[0];if(!x)return;askConfirm("Delete this event and its tasks?",'"'+(x.event||"Untitled event")+'"',function(){events=events.filter(function(e){return e.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Event deleted");},{danger:true,okLabel:"Delete"});}
 
   // ---- export / import ----
   function importJSON(file){
@@ -1125,7 +1182,7 @@
   function toggleTheme(){var cur=document.documentElement.getAttribute("data-theme");var dark=cur?cur==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);var n=dark?"light":"dark";try{localStorage.setItem(THEME_KEY,n);}catch(e){}applyTheme(n);}
 
   // ---- events ----
-  document.getElementById("newBtn").addEventListener("click",function(){view==="items"?openItem(null):openMerch(null);});
+  document.getElementById("newBtn").addEventListener("click",function(){view==="items"?openItem(null):view==="events"?newEvent():openMerch(null);});
   document.getElementById("closeModal").addEventListener("click",closeItem);
   document.getElementById("cancelBtn").addEventListener("click",closeItem);
   document.getElementById("saveBtn").addEventListener("click",saveItem);
@@ -1159,7 +1216,7 @@
   var ownerRef=null;
   function openOwnerPop(btn){
     var kind=btn.getAttribute("data-kind"),id=btn.getAttribute("data-id");
-    var rec=(kind==="item"?items:merch).filter(function(r){return r.id===id;})[0]; if(!rec)return;
+    var rec=(kind==="item"?items:kind==="event"?events:merch).filter(function(r){return r.id===id;})[0]; if(!rec)return;
     ownerRef={rec:rec,btn:btn};
     var cur=String(rec.owner||"").split(",").map(function(s){return s.trim();}).filter(Boolean);
     var pop=document.getElementById("ownerpop");
@@ -1178,11 +1235,16 @@
     var mo=e.target.closest("[data-mopen]");if(mo){var moid=mo.getAttribute("data-mopen");view="merch";filters={q:"",status:"",prio:"",country:"",owner:"",channel:""};expanded[moid]=true;document.getElementById("search").value="";render();setTimeout(function(){var bb=document.querySelector('[data-exp="'+moid+'"]');if(bb){var ttr=bb.closest("tr");if(ttr&&ttr.scrollIntoView)ttr.scrollIntoView({behavior:"smooth",block:"center"});}},60);return;}
     var dl=e.target.closest("[data-del]");if(dl){delItem(dl.getAttribute("data-del"));return;}
     var md=e.target.closest("[data-mdel]");if(md){delMerch(md.getAttribute("data-mdel"));return;}
+    var ed=e.target.closest("[data-edel]");if(ed){delEvent(ed.getAttribute("data-edel"));return;}
+    var at=e.target.closest(".addtaskinline");if(at){var aeid=at.getAttribute("data-eid");var ae=events.filter(function(z){return z.id===aeid;})[0];if(ae){ae.tasks=ae.tasks||[];ae.tasks.push({id:uid("t"),task:"",owner:"",status:"Not started",due:"",notes:""});stamp(ae);expanded[aeid]=true;saveAll();render();}return;}
+    var trm=e.target.closest(".taskrm");if(trm){var tinfo=findET(trm);if(tinfo.e&&tinfo.t){tinfo.e.tasks=tinfo.e.tasks.filter(function(z){return z.id!==tinfo.t.id;});stamp(tinfo.e);saveAll();render();}return;}
     var ex=e.target.closest("[data-exp]");if(ex){var id=ex.getAttribute("data-exp");expanded[id]=!expanded[id];render();return;}
   });
   document.getElementById("rows").addEventListener("change",function(e){
     var vst=e.target.closest(".vi-status");if(vst){var s1=findMV(vst);if(s1.v){s1.v.status=vst.value;stamp(s1.m);saveAll();}return;}
     var vdt=e.target.closest(".vi-date");if(vdt){var sd=findMV(vdt);if(sd.v){sd.v.date=vdt.value;stamp(sd.m);saveAll();render();}return;}
+    var tks=e.target.closest(".tk-status");if(tks){var ts=findET(tks);if(ts.t){ts.t.status=tks.value;stamp(ts.e);saveAll();render();}return;}
+    var tkd=e.target.closest(".tk-due");if(tkd){var td=findET(tkd);if(td.t){td.t.due=tkd.value;stamp(td.e);saveAll();render();}return;}
     var cd=e.target.closest(".cell-date");if(cd){var rd=findRec(cd);if(rd){rd[cd.getAttribute("data-f")]=cd.value;stamp(rd);saveAll();render();}return;}
     var cs=e.target.closest(".cellsel");if(cs){var rc=findRec(cs);if(rc){rc[cs.getAttribute("data-f")]=cs.value;stamp(rc);saveAll();render();}return;}
     var ss=e.target.closest(".st-sel");if(ss){var r2=findRec(ss);if(r2){r2.status=ss.value;stamp(r2);saveAll();render();}return;}
@@ -1192,6 +1254,9 @@
     var mdr=e.target.closest(".m-drive");if(mdr){var did=mdr.getAttribute("data-mid");var dm=merch.filter(function(z){return z.id===did;})[0];if(dm){dm.videoLink=mdr.value;stamp(dm);saveAll();var da=mdr.parentNode.querySelector(".m-open");var dv=safeUrl(mdr.value);if(da){if(dv){da.href=dv;da.style.display="";}else{da.style.display="none";}}}return;}
     var n=e.target.closest(".vi-notes");if(n){var i1=findMV(n);if(i1.v){i1.v.notes=n.value;stamp(i1.m);saveAll();}return;}
     var l=e.target.closest(".vi-link");if(l){var i2=findMV(l);if(i2.v){i2.v.link=l.value;stamp(i2.m);saveAll();var cell=l.closest(".linkcell");var a=cell.querySelector(".vi-open");var u=safeUrl(l.value);if(u){a.href=u;a.style.display="";}else{a.style.display="none";}}return;}
+    var tkt=e.target.closest(".tk-task");if(tkt){var q1=findET(tkt);if(q1.t){q1.t.task=tkt.value;stamp(q1.e);saveAll();}return;}
+    var tko=e.target.closest(".tk-owner");if(tko){var q2=findET(tko);if(q2.t){q2.t.owner=tko.value;stamp(q2.e);saveAll();}return;}
+    var tkn=e.target.closest(".tk-notes");if(tkn){var q3=findET(tkn);if(q3.t){q3.t.notes=tkn.value;stamp(q3.e);saveAll();}return;}
     var ci=e.target.closest(".cellin");if(ci){var rec=findRec(ci);if(rec){rec[ci.getAttribute("data-f")]=ci.value;stamp(rec);saveAll();}if(ci.classList.contains("cell-title")){ci.style.height="auto";ci.style.height=ci.scrollHeight+"px";}return;}
     var iu=e.target.closest(".il-url");if(iu){var it=items.filter(function(z){return z.id===iu.getAttribute("data-id");})[0];if(it){it.links=Array.isArray(it.links)?it.links:[];it.links[+iu.getAttribute("data-idx")]=iu.value;stamp(it);saveAll();var line=iu.parentNode,la=line.querySelector(".il-open"),lu=safeUrl(iu.value);if(la){if(lu){la.href=lu;la.style.display="";}else{la.style.display="none";}}}return;}
   });

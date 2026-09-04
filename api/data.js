@@ -15,13 +15,13 @@ async function readState() {
   const rows = await r.json();
   if (!rows.length) return null;
   const d = rows[0].data || {};
-  return { items: d.items || [], merch: d.merch || [], bugs: d.bugs || [], rev: rows[0].rev || 0 };
+  return { items: d.items || [], merch: d.merch || [], bugs: d.bugs || [], events: d.events || [], rev: rows[0].rev || 0 };
 }
 
 async function writeState(state) {
   const body = [{
     id: ROW_ID,
-    data: { items: state.items, merch: state.merch, bugs: state.bugs },
+    data: { items: state.items, merch: state.merch, bugs: state.bugs, events: state.events },
     rev: state.rev,
     updated_at: new Date().toISOString(),
   }];
@@ -48,7 +48,7 @@ export default async function handler(req, res) {
       const st = await readState();
       if (st) return res.status(200).json(st);
       // first run: migrate the backed-up data in
-      const seeded = { items: SEED.items || [], merch: SEED.merch || [], bugs: SEED.bugs || [], rev: 1 };
+      const seeded = { items: SEED.items || [], merch: SEED.merch || [], bugs: SEED.bugs || [], events: SEED.events || [], rev: 1 };
       await writeState(seeded);
       return res.status(200).json(seeded);
     }
@@ -62,6 +62,7 @@ export default async function handler(req, res) {
         items: Array.isArray(body.items) ? body.items : [],
         merch: Array.isArray(body.merch) ? body.merch : [],
         bugs: Array.isArray(body.bugs) ? body.bugs : [],
+        events: Array.isArray(body.events) ? body.events : [],
         rev,
       };
       await writeState(state);
