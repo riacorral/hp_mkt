@@ -58,11 +58,14 @@ export default async function handler(req, res) {
       if (!body || typeof body !== 'object') return res.status(400).json({ error: 'bad body' });
       const prev = await readState();
       const rev = ((prev && typeof prev.rev === 'number') ? prev.rev : 0) + 1;
+      // Preserve any collection the client did NOT send, so an older/stale tab
+      // (whose payload omits a newer key like `events`) can't blank it for everyone.
+      const keep = (key) => Array.isArray(body[key]) ? body[key] : ((prev && Array.isArray(prev[key])) ? prev[key] : []);
       const state = {
-        items: Array.isArray(body.items) ? body.items : [],
-        merch: Array.isArray(body.merch) ? body.merch : [],
-        bugs: Array.isArray(body.bugs) ? body.bugs : [],
-        events: Array.isArray(body.events) ? body.events : [],
+        items: keep('items'),
+        merch: keep('merch'),
+        bugs: keep('bugs'),
+        events: keep('events'),
         rev,
       };
       await writeState(state);
