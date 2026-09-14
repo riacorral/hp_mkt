@@ -885,9 +885,9 @@
         '<td style="width:36px"><button class="vidrm icon-btn" title="Remove video" aria-label="Remove video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>'+
       '</tr>';
     }).join("");
-    var body=rows||'<tr><td colspan="6" class="novids">No final videos yet — add one below.</td></tr>';
+    var body=rows||'<tr><td colspan="6" class="novids">No content yet — add one below.</td></tr>';
     return '<div class="vidpanel" data-mid="'+esc(x.id)+'"><table class="vids editvids"><thead><tr><th>Channels</th><th>Status</th><th>Schedule</th><th>Notes</th><th>Link</th><th></th></tr></thead><tbody>'+body+'</tbody></table>'+
-      '<button class="addvidinline" data-mid="'+esc(x.id)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add video</button></div>';
+      '<button class="addvidinline" data-mid="'+esc(x.id)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add content</button></div>';
   }
   function rowMerch(x){
     var open=!!expanded[x.id];
@@ -898,7 +898,7 @@
     var driveCell='<div class="linkcell"><input class="m-drive" data-mid="'+esc(x.id)+'" type="url" placeholder="https://…drive" value="'+esc(x.videoLink||"")+'"><a class="m-open" href="'+esc(du||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(du?"":"display:none")+'">open</a></div>';
     var main='<tr class="main" data-kind="merch" data-id="'+esc(x.id)+'">'+
       '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
-      '<td class="c-item"><textarea class="cellin cell-title" data-kind="merch" data-id="'+esc(x.id)+'" data-f="merchant" rows="1" placeholder="Merchant">'+esc(x.merchant||"")+'</textarea>'+metaLine(x,vc?' · '+vc+' video'+(vc>1?"s":""):"")+'</td>'+
+      '<td class="c-item"><textarea class="cellin cell-title" data-kind="merch" data-id="'+esc(x.id)+'" data-f="merchant" rows="1" placeholder="Merchant">'+esc(x.merchant||"")+'</textarea>'+metaLine(x,vc?' · '+vc+' item'+(vc>1?"s":""):"")+'</td>'+
       '<td>'+ownerCell("merch",x.id,x.owner)+'</td>'+
       '<td>'+prioSel("merch",x.id,x.priority)+'</td>'+
       '<td>'+statusControl(x,"merch")+'</td>'+
@@ -908,7 +908,7 @@
       '<td style="min-width:160px">'+scriptCell+'</td>'+
       '<td class="c-actions"><button class="icon-btn" data-mdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
-    var sub= open? '<tr class="subrow"><td colspan="10"><div class="subwrap"><div class="subhead">Final videos'+(vc?' · '+vc:'')+'</div>'+videosPanel(x)+'</div></td></tr>' : '';
+    var sub= open? '<tr class="subrow"><td colspan="10"><div class="subwrap"><div class="subhead">Final content'+(vc?' · '+vc:'')+'</div>'+videosPanel(x)+'</div></td></tr>' : '';
     return main+sub;
   }
 
