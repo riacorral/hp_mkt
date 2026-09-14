@@ -1019,6 +1019,8 @@
     if(isVids){ list=allVideos().filter(videoMatches); rowFn=rowVideo; }
     else { list=currentList().filter(matches); rowFn=(view==="items"?rowItem:isEvents?rowEvent:rowMerch); }
     list=sortList(list);
+    // Default view: finished items (Done / Posted) sink to the bottom, order otherwise preserved.
+    if(!sort[view]){ var act=[],fin=[]; list.forEach(function(x){ var done=(view==="vids")?(x.v&&x.v.status==="Posted"):(x.status==="Done"); (done?fin:act).push(x); }); list=act.concat(fin); }
     document.getElementById("empty").style.display=list.length?"none":"block";
     document.getElementById("emptySub").textContent = hasActiveFilters()?"Try clearing filters.":(isVids?"No final videos yet — add them under a merchant in Merchant content.":isEvents?"Add an event to get started.":"Create a new entry to get started.");
     tb.innerHTML = list.map(rowFn).join("");
