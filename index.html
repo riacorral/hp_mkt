@@ -15,6 +15,8 @@
     --s-grey-bg:#EEF1F6;  --s-grey-fg:#5A6577;
     --s-blue-bg:#E7EEFF;  --s-blue-fg:#1F52D6;
     --s-red-bg:#FDECED;   --s-red-fg:#CB2531;
+    --cal-ev-bg:#FBE0E0;  --cal-ev-fg:#C0473F;
+    --cal-task-bg:#EFE3D4;--cal-task-fg:#8A5A2B;
     --s-amber-bg:#FAF0D8; --s-amber-fg:#9C6708;
     --s-teal-bg:#DDF3F1;  --s-teal-fg:#0C8079;
     --s-violet-bg:#EDEAFD;--s-violet-fg:#5F3FD1;
@@ -32,6 +34,8 @@
       --s-grey-bg:#1B2432;  --s-grey-fg:#A7B4C8;
       --s-blue-bg:#16233E;  --s-blue-fg:#9DBAFF;
       --s-red-bg:#351A1D;   --s-red-fg:#FF9AA0;
+      --cal-ev-bg:#3E2020;  --cal-ev-fg:#F1A9A5;
+      --cal-task-bg:#302516;--cal-task-fg:#DBB689;
       --s-amber-bg:#312611; --s-amber-fg:#EEC272;
       --s-teal-bg:#0F2E2C;  --s-teal-fg:#7EDAD3;
       --s-violet-bg:#231B3D;--s-violet-fg:#C3B2FF;
@@ -204,10 +208,10 @@
   .calev .cm{font-size:11.5px; font-weight:600; color:var(--ink); line-height:1.25; word-break:break-word}
   .calev .csub{display:flex; align-items:center; gap:4px; flex-wrap:wrap}
   .calev .cch{font-size:9.5px; font-weight:700; padding:1px 5px; border-radius:4px}
-  .calev-ev{border-left-color:var(--s-blue-fg); background:var(--s-blue-bg)}
-  .calev-task{border-left-color:var(--s-violet-fg); background:var(--s-violet-bg)}
-  .tsktag{color:var(--s-violet-fg); border-color:var(--s-violet-fg)}
-  .evtag{font-size:8.5px; font-weight:800; letter-spacing:.04em; color:var(--s-blue-fg); background:var(--surface); border:1px solid var(--s-blue-fg); border-radius:3px; padding:0 3px; vertical-align:1px}
+  .calev-ev{border-left-color:var(--cal-ev-fg); background:var(--cal-ev-bg)}
+  .calev-task{border-left-color:var(--cal-task-fg); background:var(--cal-task-bg)}
+  .tsktag{color:var(--cal-task-fg); border-color:var(--cal-task-fg)}
+  .evtag{font-size:8.5px; font-weight:800; letter-spacing:.04em; color:var(--cal-ev-fg); background:var(--surface); border:1px solid var(--cal-ev-fg); border-radius:3px; padding:0 3px; vertical-align:1px}
   .calempty{padding:40px 20px; text-align:center; color:var(--ink-3)}
   @media (max-width:640px){ .calcell{min-height:78px} .caldow:nth-child(n){font-size:9px} }
   .tablescroll{overflow-x:auto}
