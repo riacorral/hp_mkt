@@ -1082,7 +1082,7 @@
       var html='<div class="caldate">'+dt.getDate()+'</div>';
       evs.forEach(function(ev){
         var isEv=ev.kind==="event", isTask=ev.kind==="task";
-        var tag=isEv?'<span class="evtag">EVENT</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':'<span class="evtag vidtag">VIDEO</span> ';
+        var tag=isEv?'<span class="evtag">EVENT</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':'';
         html+='<div class="calev'+(isEv?" calev-ev":isTask?" calev-task":"")+'" data-kind="'+esc(ev.kind)+'" data-id="'+esc(ev.id)+'"><div class="cm">'+tag+esc(ev.title)+'</div><div class="csub">'+
           (ev.channels||[]).map(function(ch){return '<span class="cch chan '+esc(ch)+'">'+esc(ch)+'</span>';}).join("")+
           '<span class="pill '+statusCls(ev.status)+'" style="font-size:9.5px;padding:1px 6px">'+esc(ev.status)+'</span></div></div>';
