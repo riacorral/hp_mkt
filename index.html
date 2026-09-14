@@ -952,6 +952,19 @@
     return '<div class="vidpanel" data-eid="'+esc(x.id)+'"><table class="vids editvids"><thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Due</th><th>Notes</th><th></th></tr></thead><tbody>'+body+'</tbody></table>'+
       '<button class="addtaskinline" data-eid="'+esc(x.id)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add task</button></div>';
   }
+  var GCAL_GUESTS=["ria@hit-pay.com","nicole@hit-pay.com"];
+  var GCALSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>';
+  function ymd(ds){return ds.replace(/-/g,"");}
+  function nextYmd(ds){var d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+1);return fmtDate(d.getFullYear(),d.getMonth(),d.getDate()).replace(/-/g,"");}
+  function gcalUrl(x){
+    var p=["action=TEMPLATE","text="+encodeURIComponent(x.event||"Event")];
+    if(isValidDate(x.date))p.push("dates="+ymd(x.date)+"/"+nextYmd(x.date));
+    var det=[]; if(x.format)det.push("Format: "+x.format); if(x.info)det.push(x.info); if(x.notes)det.push(x.notes);
+    if(det.length)p.push("details="+encodeURIComponent(det.join("\n\n")));
+    if(x.country)p.push("location="+encodeURIComponent(x.country));
+    GCAL_GUESTS.forEach(function(g){p.push("add="+encodeURIComponent(g));});
+    return "https://calendar.google.com/calendar/render?"+p.join("&");
+  }
   function rowEvent(x){
     var open=!!expanded[x.id];
     var tc=(x.tasks||[]).length;
@@ -965,7 +978,7 @@
       '<td>'+eventDateCell(x)+'</td>'+
       '<td>'+cellIn("event",x.id,"country",x.country,"Country")+'</td>'+
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="event" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
-      '<td class="c-actions"><button class="icon-btn" data-edel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
+      '<td class="c-actions"><button class="icon-btn gcalbtn" data-gcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-edel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
     var info='<div class="infowrap"><div class="subhead">Partners &amp; general info</div><textarea class="evinfo celltxt" data-id="'+esc(x.id)+'" placeholder="Partners, sponsors, contacts, venue, budget, links, general info…">'+esc(x.info||"")+'</textarea></div>';
     var sub= open? '<tr class="subrow"><td colspan="10"><div class="subwrap">'+info+'<div class="subhead" style="margin-top:16px">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
@@ -1261,6 +1274,7 @@
     var mo=e.target.closest("[data-mopen]");if(mo){var moid=mo.getAttribute("data-mopen");view="merch";filters={q:"",status:"",prio:"",country:"",owner:"",channel:""};expanded[moid]=true;document.getElementById("search").value="";render();setTimeout(function(){var bb=document.querySelector('[data-exp="'+moid+'"]');if(bb){var ttr=bb.closest("tr");if(ttr&&ttr.scrollIntoView)ttr.scrollIntoView({behavior:"smooth",block:"center"});}},60);return;}
     var dl=e.target.closest("[data-del]");if(dl){delItem(dl.getAttribute("data-del"));return;}
     var md=e.target.closest("[data-mdel]");if(md){delMerch(md.getAttribute("data-mdel"));return;}
+    var gc=e.target.closest("[data-gcal]");if(gc){var ge=events.filter(function(z){return z.id===gc.getAttribute("data-gcal");})[0];if(ge){if(!(ge.event||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalUrl(ge),"_blank","noopener");}return;}
     var ed=e.target.closest("[data-edel]");if(ed){delEvent(ed.getAttribute("data-edel"));return;}
     var at=e.target.closest(".addtaskinline");if(at){var aeid=at.getAttribute("data-eid");var ae=events.filter(function(z){return z.id===aeid;})[0];if(ae){ae.tasks=ae.tasks||[];ae.tasks.push({id:uid("t"),task:"",owner:"",status:"Not started",due:"",notes:""});stamp(ae);expanded[aeid]=true;saveAll();render();}return;}
     var trm=e.target.closest(".taskrm");if(trm){var tinfo=findET(trm);if(tinfo.e&&tinfo.t){tinfo.e.tasks=tinfo.e.tasks.filter(function(z){return z.id!==tinfo.t.id;});stamp(tinfo.e);saveAll();render();}return;}
