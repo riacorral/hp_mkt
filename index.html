@@ -211,6 +211,7 @@
   .calev-ev{border-left-color:var(--cal-ev-fg); background:var(--cal-ev-bg)}
   .calev-task{border-left-color:var(--cal-task-fg); background:var(--cal-task-bg)}
   .tsktag{color:var(--cal-task-fg); border-color:var(--cal-task-fg)}
+  .vidtag{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
   .evtag{font-size:8.5px; font-weight:800; letter-spacing:.04em; color:var(--cal-ev-fg); background:var(--surface); border:1px solid var(--cal-ev-fg); border-radius:3px; padding:0 3px; vertical-align:1px}
   .calempty{padding:40px 20px; text-align:center; color:var(--ink-3)}
   @media (max-width:640px){ .calcell{min-height:78px} .caldow:nth-child(n){font-size:9px} }
@@ -1081,7 +1082,7 @@
       var html='<div class="caldate">'+dt.getDate()+'</div>';
       evs.forEach(function(ev){
         var isEv=ev.kind==="event", isTask=ev.kind==="task";
-        var tag=isEv?'<span class="evtag">EVENT</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':'';
+        var tag=isEv?'<span class="evtag">EVENT</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':'<span class="evtag vidtag">VIDEO</span> ';
         html+='<div class="calev'+(isEv?" calev-ev":isTask?" calev-task":"")+'" data-kind="'+esc(ev.kind)+'" data-id="'+esc(ev.id)+'"><div class="cm">'+tag+esc(ev.title)+'</div><div class="csub">'+
           (ev.channels||[]).map(function(ch){return '<span class="cch chan '+esc(ch)+'">'+esc(ch)+'</span>';}).join("")+
           '<span class="pill '+statusCls(ev.status)+'" style="font-size:9.5px;padding:1px 6px">'+esc(ev.status)+'</span></div></div>';
