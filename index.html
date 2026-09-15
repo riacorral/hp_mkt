@@ -140,6 +140,13 @@
   .card.view-events thead th{background:var(--s-blue-bg)}
   .tabs-events .tab.active{color:var(--s-blue-fg); border-bottom-color:var(--s-blue-fg)}
   .tabs-events .tab.active .cnt{background:var(--s-blue-bg); color:var(--s-blue-fg)}
+  .card.view-partners{border-top-color:var(--s-green-fg)}
+  .card.view-partners thead th{background:var(--s-green-bg)}
+  .tabs-partners .tab.active{color:var(--s-green-fg); border-bottom-color:var(--s-green-fg)}
+  .tabs-partners .tab.active .cnt{background:var(--s-green-bg); color:var(--s-green-fg)}
+  .plink{cursor:pointer}
+  .plink:hover{background:var(--surface-2)}
+  .popen{color:var(--accent); font-weight:600; font-size:12px}
   .tabs-cal .tab.active{color:var(--s-violet-fg); border-bottom-color:var(--s-violet-fg)}
   .tabs-cal .tab.active .cnt{background:var(--s-violet-bg); color:var(--s-violet-fg)}
   .tabs-vids .tab.active{color:var(--s-amber-fg); border-bottom-color:var(--s-amber-fg)}
@@ -310,8 +317,8 @@
   .m-open:hover{text-decoration:underline}
   .vidrm{color:var(--danger)}
   .vidrm:hover{background:var(--danger-soft); border-color:transparent}
-  .addvidinline,.addtaskinline{margin-top:12px; font-size:12.5px; border:1px dashed var(--border-strong); background:transparent}
-  .addvidinline:hover,.addtaskinline:hover{border-color:var(--accent); color:var(--accent)}
+  .addvidinline,.addtaskinline,.addeventinline{margin-top:12px; font-size:12.5px; border:1px dashed var(--border-strong); background:transparent}
+  .addvidinline:hover,.addtaskinline:hover,.addeventinline:hover{border-color:var(--accent); color:var(--accent)}
 
   .chanpick{display:inline-flex; align-items:center; gap:5px; flex-wrap:wrap; width:100%; min-width:120px; min-height:32px; border:1px solid var(--border-strong); background:var(--surface-2); border-radius:4px; padding:5px 8px; font-size:11px; cursor:pointer; justify-content:flex-start}
   .chanpick:hover{border-color:var(--ink-3)}
@@ -648,7 +655,7 @@
     }
   }
 
-  var items=[], merch=[], events=[];
+  var items=[], merch=[], events=[], partners=[];
   var API="/api/data";
   var serverRev=-1, saveTimer=null, lastMutation=0, lastSync=0, syncTimer=null;
   function updateSyncLabel(){var el=document.getElementById("syncLabel");if(!el)return;if(!lastSync){el.textContent="connecting…";return;}var s=Math.round((Date.now()-lastSync)/1000);el.textContent=s<3?"synced just now":s<60?("synced "+s+"s ago"):("synced "+Math.round(s/60)+"m ago");}
@@ -656,7 +663,7 @@
     var it=seedItems(), mr=seedMerch();
     ADD_MERCH_A11.slice().reverse().forEach(function(m){mr.unshift(JSON.parse(JSON.stringify(m)));});
     ADD_ITEMS_A11.slice().reverse().forEach(function(i){it.unshift(JSON.parse(JSON.stringify(i)));});
-    return {items:it, merch:mr, bugs:[], events:[]};
+    return {items:it, merch:mr, bugs:[], events:[], partners:[]};
   }
   function normalizeState(){
     merch.forEach(function(m,i){m.videos=(Array.isArray(m.videos)?m.videos:[]).map(function(v,j){return normVideo(v,i,j);});});
@@ -669,21 +676,31 @@
       if(!e.added)e.added=e.updated||"—"; if(e.addedBy===undefined)e.addedBy=""; if(e.updatedBy===undefined)e.updatedBy="";
       if(e.priority===undefined)e.priority="Medium"; if(e.status===undefined)e.status="Not started"; if(e.notes===undefined)e.notes=""; if(e.info===undefined)e.info=""; if(e.format===undefined)e.format="";
       if(e.country){var ec=CNORM[String(e.country).trim().toLowerCase()]; if(ec)e.country=ec;}
+      if(e.partnerId===undefined)e.partnerId="";
     });
+    partners.forEach(function(p){
+      if(p.partner===undefined)p.partner=String(p.name||"");
+      if(!p.added)p.added=p.updated||"—"; if(p.addedBy===undefined)p.addedBy=""; if(p.updatedBy===undefined)p.updatedBy="";
+      if(p.priority===undefined)p.priority="Medium"; if(p.status===undefined)p.status="Not started"; if(p.notes===undefined)p.notes=""; if(p.info===undefined)p.info="";
+      if(p.country){var pc=CNORM[String(p.country).trim().toLowerCase()]; if(pc)p.country=pc;}
+    });
+    // Drop dangling event→partner links.
+    var pids={}; partners.forEach(function(p){pids[p.id]=1;});
+    events.forEach(function(e){ if(e.partnerId && !pids[e.partnerId]) e.partnerId=""; });
   }
-  function applyServer(st){ items=Array.isArray(st.items)?st.items:[]; merch=Array.isArray(st.merch)?st.merch:[]; bugs=Array.isArray(st.bugs)?st.bugs:[]; events=Array.isArray(st.events)?st.events:[]; if(typeof st.rev==="number")serverRev=st.rev; normalizeState(); }
+  function applyServer(st){ items=Array.isArray(st.items)?st.items:[]; merch=Array.isArray(st.merch)?st.merch:[]; bugs=Array.isArray(st.bugs)?st.bugs:[]; events=Array.isArray(st.events)?st.events:[]; partners=Array.isArray(st.partners)?st.partners:[]; if(typeof st.rev==="number")serverRev=st.rev; normalizeState(); }
   function loadAll(done){
     fetch(API,{cache:"no-store"}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(st){
       if(st===null) return;
       lastSync=Date.now();
-      if(st && st.empty){ var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; events=s.events; normalizeState(); saveNow(); }
+      if(st && st.empty){ var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; events=s.events; partners=s.partners; normalizeState(); saveNow(); }
       else { applyServer(st); }
       if(done)done();
-    }).catch(function(){ var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; events=s.events; normalizeState(); if(done)done(); toast("Offline — showing a local copy; changes may not sync.",true); });
+    }).catch(function(){ var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; events=s.events; partners=s.partners; normalizeState(); if(done)done(); toast("Offline — showing a local copy; changes may not sync.",true); });
   }
   function saveNow(){
     lastMutation=Date.now();
-    return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items,merch:merch,bugs:bugs,events:events})}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(res){ if(res){ lastSync=Date.now(); if(typeof res.rev==="number")serverRev=res.rev; } }).catch(function(){ toast("Save failed — check your connection.",true); });
+    return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items,merch:merch,bugs:bugs,events:events,partners:partners})}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(res){ if(res){ lastSync=Date.now(); if(typeof res.rev==="number")serverRev=res.rev; } }).catch(function(){ toast("Save failed — check your connection.",true); });
   }
   function saveAll(){ lastMutation=Date.now(); if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(function(){saveTimer=null;saveNow();},350); }
   function isBusyUI(){ if(document.querySelector(".overlay.open"))return true; if(document.querySelector(".chanpop.open"))return true; var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return true; return saveTimer!==null; }
@@ -730,11 +747,11 @@
 
   // ---- state ----
   var view="items"; // "items" | "merch"
-  var sort={items:null, merch:null, vids:null, events:null}; // {key,dir:1|-1} or null
+  var sort={items:null, merch:null, vids:null, events:null, partners:null}; // {key,dir:1|-1} or null
   var filters={q:"",status:"__open__",prio:"",country:"",owner:"",channel:""};
   var expanded={};
 
-  function currentList(){return view==="items"?items:view==="events"?events:merch;}
+  function currentList(){return view==="items"?items:view==="events"?events:view==="partners"?partners:merch;}
   function isOpen(x){return x.status!=="Done"&&x.status!=="On hold";}
   function defaultStatus(v){return v==="items"?"__open__":"";}
   function hasActiveFilters(){return !!(filters.q||filters.prio||filters.owner||filters.channel||((view==="merch"||view==="vids"||view==="events")&&filters.country)||(filters.status&&filters.status!==defaultStatus(view)));}
@@ -742,8 +759,8 @@
 
   function scheduledCount(all){var n=0;merch.forEach(function(m){(m.videos||[]).forEach(function(v){if(all||v.date)n++;});});if(!all){events.forEach(function(e){if(isValidDate(e.date))n++;});}return n;}
   function renderTabs(){
-    var el=document.getElementById("tabs"); el.innerHTML=""; el.className="tabs "+(view==="items"?"tabs-items":view==="merch"?"tabs-merch":view==="vids"?"tabs-vids":view==="events"?"tabs-events":view==="report"?"tabs-report":"tabs-cal");
-    [{k:"items",l:"Action items",n:items.length},{k:"merch",l:"Merchant content",n:merch.length},{k:"events",l:"Events",n:events.length},{k:"vids",l:"All videos",n:scheduledCount(true)},{k:"cal",l:"Calendar",n:scheduledCount()},{k:"report",l:"Analytics",n:null}].forEach(function(t){
+    var el=document.getElementById("tabs"); el.innerHTML=""; el.className="tabs "+(view==="items"?"tabs-items":view==="merch"?"tabs-merch":view==="vids"?"tabs-vids":view==="events"?"tabs-events":view==="partners"?"tabs-partners":view==="report"?"tabs-report":"tabs-cal");
+    [{k:"items",l:"Action items",n:items.length},{k:"merch",l:"Merchant content",n:merch.length},{k:"events",l:"Events",n:events.length},{k:"partners",l:"Partnerships",n:partners.length},{k:"vids",l:"All videos",n:scheduledCount(true)},{k:"cal",l:"Calendar",n:scheduledCount()},{k:"report",l:"Analytics",n:null}].forEach(function(t){
       var b=document.createElement("button");
       b.className="tab"+(view===t.k?" active":""); b.setAttribute("role","tab"); b.setAttribute("aria-selected",view===t.k?"true":"false");
       b.innerHTML=esc(t.l)+(t.n===null?'':' <span class="cnt">'+t.n+'</span>');
@@ -757,7 +774,7 @@
     var list=currentList();
     var defs=[ view==="items"
       ? {key:"__open__",label:"Open items",n:list.filter(isOpen).length}
-      : {key:"",label:view==="events"?"All events":"All merchants",n:list.length} ];
+      : {key:"",label:view==="events"?"All events":view==="partners"?"All partnerships":"All merchants",n:list.length} ];
     ["In progress","Blocked","Not started","Done"].forEach(function(s){
       defs.push({key:s,label:s,n:list.filter(function(x){return x.status===s;}).length});
     });
@@ -774,12 +791,13 @@
     else if(filters.status && x.status!==filters.status) return false;
     if(filters.prio && x.priority!==filters.prio) return false;
     if(filters.owner && ownersOf(x).indexOf(filters.owner)<0) return false;
-    if((view==="merch"||view==="events") && filters.country && x.country!==filters.country) return false;
+    if((view==="merch"||view==="events"||view==="partners") && filters.country && x.country!==filters.country) return false;
     if(view==="merch" && filters.channel && !(x.videos||[]).some(function(v){return (v.channels||[]).indexOf(filters.channel)>=0;})) return false;
     if(filters.q){
       var q=filters.q.toLowerCase(), hay;
       if(view==="items") hay=(x.item+" "+x.owner+" "+x.notes+" "+x.due+" "+x.status);
       else if(view==="events") hay=(x.event+" "+x.owner+" "+x.country+" "+x.notes+" "+x.date+" "+x.status+" "+(x.tasks||[]).map(function(t){return t.task+" "+t.owner+" "+t.notes;}).join(" "));
+      else if(view==="partners") hay=(x.partner+" "+x.owner+" "+x.country+" "+x.notes+" "+x.info+" "+x.status);
       else hay=(x.merchant+" "+x.owner+" "+x.country+" "+x.notes+" "+x.due+" "+x.status+" "+(x.videos||[]).map(function(v){return (v.channels||[]).join(" ")+" "+v.notes;}).join(" "));
       if(hay.toLowerCase().indexOf(q)<0) return false;
     }
@@ -806,7 +824,7 @@
       if(key==="date")return {t:"d",v:vv.date};
     } else {
       if(key==="item")return {t:"s",v:rec.item}; if(key==="merchant")return {t:"s",v:rec.merchant};
-      if(key==="event")return {t:"s",v:rec.event}; if(key==="date")return {t:"d",v:rec.date}; if(key==="format")return {t:"s",v:rec.format};
+      if(key==="event")return {t:"s",v:rec.event}; if(key==="date")return {t:"d",v:rec.date}; if(key==="format")return {t:"s",v:rec.format}; if(key==="partner")return {t:"s",v:rec.partner};
       if(key==="owner")return {t:"s",v:rec.owner}; if(key==="country")return {t:"s",v:rec.country};
       if(key==="priority")return {t:"n",v:PRIOS.indexOf(rec.priority)}; if(key==="status")return {t:"n",v:stRank(rec.status)};
       if(key==="due")return {t:"d",v:rec.due};
@@ -828,12 +846,12 @@
   // ---- item table ----
   function thItems(){return '<tr>'+sth("items","item","Action item",'width:28%')+sth("items","owner","Owner")+sth("items","priority","Priority")+sth("items","status","Status")+sth("items","due","Due")+'<th style="width:26%">Notes &amp; reference link</th><th style="text-align:right">Actions</th></tr>';}
   var LINKSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
-  function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:kind==="event"?events:merch;return arr.filter(function(r){return r.id===id;})[0];}
+  function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:kind==="event"?events:kind==="partner"?partners:merch;return arr.filter(function(r){return r.id===id;})[0];}
   function cellIn(kind,id,f,val,ph){return '<input class="cellin" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" value="'+esc(val==null?"":val)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(f==="country"?' list="countryList"':(f==="owner"?' list="ownerList"':''))+'>';}
   function prioSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="priority">'+PRIOS.map(function(p){return '<option'+(p===val?" selected":"")+'>'+esc(p)+'</option>';}).join("")+'</select>';}
   var FORMATS=["Physical","Online"];
   function formatSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="format"><option value=""'+(val?"":" selected")+'>—</option>'+FORMATS.map(function(f){return '<option'+(f===val?" selected":"")+'>'+esc(f)+'</option>';}).join("")+'</select>';}
-  function ownerNamesAll(){var s=[];items.concat(merch).concat(events).forEach(function(x){String(x.owner||"").split(",").map(function(t){return t.trim();}).forEach(function(n){if(n&&s.indexOf(n)<0)s.push(n);});});s.sort();return s;}
+  function ownerNamesAll(){var s=[];items.concat(merch).concat(events).concat(partners).forEach(function(x){String(x.owner||"").split(",").map(function(t){return t.trim();}).forEach(function(n){if(n&&s.indexOf(n)<0)s.push(n);});});s.sort();return s;}
   function ownerCaret(){return '<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg>';}
   function ownerCell(kind,id,val){var names=String(val||"").split(",").map(function(s){return s.trim();}).filter(Boolean);return '<button type="button" class="ownerpick" data-kind="'+kind+'" data-id="'+esc(id)+'">'+(names.length?esc(names.join(", ")):'<span class="chanplace">Owner</span>')+ownerCaret()+'</button>';}
   function metaLine(x,extra){return '<div class="meta">added '+esc(x.added||"—")+(x.addedBy?' by '+esc(x.addedBy):'')+'</div><div class="meta metasub">updated '+esc(x.updated||"—")+(x.updatedBy?' by '+esc(x.updatedBy):'')+(extra||"")+'</div>';}
@@ -941,7 +959,7 @@
   }
 
   // ---- events table ----
-  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:22%')+sth("events","owner","Owner")+sth("events","priority","Priority")+sth("events","status","Status")+sth("events","format","Format")+sth("events","date","Date")+sth("events","country","Country")+'<th style="width:22%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:22%')+sth("events","owner","Owner")+sth("events","priority","Priority")+sth("events","status","Status")+sth("events","format","Format")+sth("events","date","Date")+sth("events","country","Country")+'<th>Partner</th><th style="width:20%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function eventDateCell(x){var d=isValidDate(x.date)?x.date:"";var over=d && d<today() && isOpen(x);return '<div class="datewrap">'+(over?'<span class="odflag" title="Passed">⚠</span>':'')+'<input class="cellin cell-date'+(over?" overdue":"")+'" type="date" data-kind="event" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'" title="'+(over?"Event date passed":"Event date")+'"></div>';}
   var TASKDEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
   function tasksPanel(x){
@@ -995,14 +1013,43 @@
       '<td>'+formatSel("event",x.id,x.format)+'</td>'+
       '<td>'+eventDateCell(x)+'</td>'+
       '<td>'+cellIn("event",x.id,"country",x.country,"Country")+'</td>'+
+      '<td>'+partnerSel("event",x.id,x.partnerId)+'</td>'+
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="event" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
       '<td class="c-actions"><button class="icon-btn gcalbtn" data-gcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-edel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
     var info='<div class="infowrap"><div class="subhead">Partners &amp; general info</div><textarea class="evinfo celltxt" data-id="'+esc(x.id)+'" placeholder="Partners, sponsors, contacts, venue, budget, links, general info…">'+esc(x.info||"")+'</textarea></div>';
-    var sub= open? '<tr class="subrow"><td colspan="10"><div class="subwrap">'+info+'<div class="subhead" style="margin-top:16px">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
+    var sub= open? '<tr class="subrow"><td colspan="11"><div class="subwrap">'+info+'<div class="subhead" style="margin-top:16px">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
     return main+sub;
   }
   function findET(el){var ee=el.closest("[data-eid]");var eid=ee?ee.getAttribute("data-eid"):null;var tr=el.closest("[data-tid]");var tid=tr?tr.getAttribute("data-tid"):null;var ev=events.filter(function(z){return z.id===eid;})[0];var t=(ev&&tid)?(ev.tasks||[]).filter(function(z){return z.id===tid;})[0]:null;return {e:ev,t:t};}
+
+  // ---- partnerships ----
+  function partnerName(id){var p=partners.filter(function(z){return z.id===id;})[0];return p?(p.partner||"Untitled"):"";}
+  function partnerSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="partnerId"><option value=""'+(val?"":" selected")+'>—</option>'+partners.map(function(p){return '<option value="'+esc(p.id)+'"'+(p.id===val?" selected":"")+'>'+esc(p.partner||"Untitled")+'</option>';}).join("")+'</select>';}
+  function thPartners(){return '<tr><th class="c-exp"></th>'+sth("partners","partner","Partner",'width:24%')+sth("partners","owner","Owner")+sth("partners","priority","Priority")+sth("partners","status","Status")+sth("partners","country","Country")+'<th style="width:26%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function rowPartner(x){
+    var open=!!expanded[x.id];
+    var linked=events.filter(function(e){return e.partnerId===x.id;});
+    var lc=linked.length;
+    var main='<tr class="main" data-kind="partner" data-id="'+esc(x.id)+'">'+
+      '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
+      '<td class="c-item"><textarea class="cellin cell-title" data-kind="partner" data-id="'+esc(x.id)+'" data-f="partner" rows="1" placeholder="Partner name">'+esc(x.partner||"")+'</textarea>'+metaLine(x,lc?' · '+lc+' event'+(lc>1?"s":""):"")+'</td>'+
+      '<td>'+ownerCell("partner",x.id,x.owner)+'</td>'+
+      '<td>'+prioSel("partner",x.id,x.priority)+'</td>'+
+      '<td>'+statusControl(x,"partner")+'</td>'+
+      '<td>'+cellIn("partner",x.id,"country",x.country,"Country")+'</td>'+
+      '<td class="c-notes"><textarea class="cellin celltxt" data-kind="partner" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
+      '<td class="c-actions"><button class="icon-btn" data-pdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
+    '</tr>';
+    var info='<div class="infowrap"><div class="subhead">Partnership details</div><textarea class="pinfo celltxt" data-id="'+esc(x.id)+'" placeholder="Contacts, terms, value, links, general info…">'+esc(x.info||"")+'</textarea></div>';
+    var elist=linked.map(function(e){var d=isValidDate(e.date)?e.date:"—";return '<tr class="plink" data-eopen="'+esc(e.id)+'"><td>'+esc(e.event||"Untitled event")+'</td><td style="width:120px">'+esc(d)+'</td><td style="width:150px"><span class="pill '+statusCls(e.status)+'" style="font-size:11px">'+esc(e.status)+'</span></td><td style="width:70px;text-align:right"><span class="popen">open ↗</span></td></tr>';}).join("");
+    var ebody=elist||'<tr><td colspan="4" class="novids">No linked events yet — add one below.</td></tr>';
+    var epanel='<div class="vidpanel"><table class="vids"><thead><tr><th>Event</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>'+ebody+'</tbody></table><button class="addeventinline" data-pid="'+esc(x.id)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add event</button></div>';
+    var sub= open? '<tr class="subrow"><td colspan="8"><div class="subwrap">'+info+'<div class="subhead" style="margin-top:16px">Linked events'+(lc?' · '+lc:'')+'</div>'+epanel+'</div></td></tr>' : '';
+    return main+sub;
+  }
+  function newPartner(){var p={id:uid("pt"),partner:"",owner:"",priority:"Medium",status:"Not started",country:"",notes:"",info:"",added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};partners.unshift(p);expanded[p.id]=true;saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="partner"][data-id="'+p.id+'"]');if(ta)ta.focus();},50);}
+  function delPartner(id){var x=partners.filter(function(p){return p.id===id;})[0];if(!x)return;var lc=events.filter(function(e){return e.partnerId===id;}).length;askConfirm("Delete this partnership?",'"'+(x.partner||"Untitled")+'"'+(lc?" — "+lc+" linked event"+(lc>1?"s":"")+" will be unlinked (not deleted)":""),function(){events.forEach(function(e){if(e.partnerId===id)e.partnerId="";});partners=partners.filter(function(p){return p.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Partnership deleted");},{danger:true,okLabel:"Delete"});}
 
   function syncStatusFilter(){
     var fs=document.getElementById("fStatus");
@@ -1013,8 +1060,8 @@
   function render(){
     closeChanPop(); closeOwnerPop();
     renderTabs();
-    var isCal=(view==="cal"), isVids=(view==="vids"), isReport=(view==="report"), isEvents=(view==="events");
-    document.getElementById("stats").style.display=(view==="items"||view==="merch"||isEvents)?"":"none";
+    var isCal=(view==="cal"), isVids=(view==="vids"), isReport=(view==="report"), isEvents=(view==="events"), isPartners=(view==="partners");
+    document.getElementById("stats").style.display=(view==="items"||view==="merch"||isEvents||isPartners)?"":"none";
     document.querySelector(".toolbar").style.display=(isCal||isReport)?"none":"flex";
     document.getElementById("tableCard").style.display=(isCal||isReport)?"none":"";
     document.getElementById("calWrap").style.display=isCal?"":"none";
@@ -1022,25 +1069,25 @@
     document.getElementById("newBtn").style.display=(isCal||isVids||isReport)?"none":"";
     if(isCal){ renderCalendar(); return; }
     if(isReport){ renderReport(); return; }
-    if(view==="items"||view==="merch"||isEvents) renderStats();
-    document.getElementById("fPrio").style.display=(view==="items"||view==="merch"||isEvents)?"":"none";
-    document.getElementById("fCountry").style.display=(view==="merch"||isVids||isEvents)?"":"none";
+    if(view==="items"||view==="merch"||isEvents||isPartners) renderStats();
+    document.getElementById("fPrio").style.display=(view==="items"||view==="merch"||isEvents||isPartners)?"":"none";
+    document.getElementById("fCountry").style.display=(view==="merch"||isVids||isEvents||isPartners)?"":"none";
     document.getElementById("fChannel").style.display=(view==="merch"||isVids)?"":"none";
-    document.getElementById("tableCard").className="card "+(view==="items"?"view-items":isVids?"view-vids":isEvents?"view-events":"view-merch");
-    document.getElementById("newLabel").textContent = view==="items"?"New item":isEvents?"New event":"New merchant";
-    document.getElementById("search").placeholder = view==="items"?"Search items, owners, notes…":isVids?"Search videos, merchants, channels…":isEvents?"Search events, owners, tasks…":"Search merchants, owners, videos…";
+    document.getElementById("tableCard").className="card "+(view==="items"?"view-items":isVids?"view-vids":isEvents?"view-events":isPartners?"view-partners":"view-merch");
+    document.getElementById("newLabel").textContent = view==="items"?"New item":isEvents?"New event":isPartners?"New partnership":"New merchant";
+    document.getElementById("search").placeholder = view==="items"?"Search items, owners, notes…":isVids?"Search videos, merchants, channels…":isEvents?"Search events, owners, tasks…":isPartners?"Search partnerships, owners, notes…":"Search merchants, owners, videos…";
     syncStatusFilter();
     document.getElementById("fChannel").value=filters.channel;
     var thead=document.getElementById("thead"), tb=document.getElementById("rows");
-    thead.innerHTML = view==="items"?thItems():isVids?thVids():isEvents?thEvents():thMerch();
+    thead.innerHTML = view==="items"?thItems():isVids?thVids():isEvents?thEvents():isPartners?thPartners():thMerch();
     var list, rowFn;
     if(isVids){ list=allVideos().filter(videoMatches); rowFn=rowVideo; }
-    else { list=currentList().filter(matches); rowFn=(view==="items"?rowItem:isEvents?rowEvent:rowMerch); }
+    else { list=currentList().filter(matches); rowFn=(view==="items"?rowItem:isEvents?rowEvent:isPartners?rowPartner:rowMerch); }
     list=sortList(list);
     // Default view: finished items (Done / Posted) sink to the bottom, order otherwise preserved.
     if(!sort[view]){ var act=[],fin=[]; list.forEach(function(x){ var done=(view==="vids")?(x.v&&x.v.status==="Posted"):(x.status==="Done"); (done?fin:act).push(x); }); list=act.concat(fin); }
     document.getElementById("empty").style.display=list.length?"none":"block";
-    document.getElementById("emptySub").textContent = hasActiveFilters()?"Try clearing filters.":(isVids?"No final videos yet — add them under a merchant in Merchant content.":isEvents?"Add an event to get started.":"Create a new entry to get started.");
+    document.getElementById("emptySub").textContent = hasActiveFilters()?"Try clearing filters.":(isVids?"No final videos yet — add them under a merchant in Merchant content.":isEvents?"Add an event to get started.":isPartners?"Add a partnership to get started.":"Create a new entry to get started.");
     tb.innerHTML = list.map(rowFn).join("");
     sizeTitles();
     document.getElementById("clearBtn").style.display=hasActiveFilters()?"inline-flex":"none";
@@ -1093,7 +1140,7 @@
   }
 
   function renderReport(){
-    var recs=items.concat(merch).concat(events);
+    var recs=items.concat(merch).concat(events).concat(partners);
     function blank(){return {total:0,open:0,inprog:0,blocked:0,notstarted:0,done:0};}
     function tally(p,x){p.total++; if(isOpen(x))p.open++; if(x.status==="In progress")p.inprog++; if(x.status==="Blocked")p.blocked++; if(x.status==="Not started")p.notstarted++; if(x.status==="Done")p.done++;}
     var people={}, team=blank();
@@ -1128,9 +1175,9 @@
   function refreshOptions(){
     var owners=[],countries=[];
     var pushName=function(n){n=(n||"").trim();if(n&&owners.indexOf(n)<0)owners.push(n);};
-    items.concat(merch).concat(events).forEach(function(x){String(x.owner||"").split(",").forEach(pushName);});
+    items.concat(merch).concat(events).concat(partners).forEach(function(x){String(x.owner||"").split(",").forEach(pushName);});
     events.forEach(function(e){(e.tasks||[]).forEach(function(t){String(t.owner||"").split(",").forEach(pushName);});});
-    merch.concat(events).forEach(function(x){if(x.country&&countries.indexOf(x.country)<0)countries.push(x.country);});
+    merch.concat(events).concat(partners).forEach(function(x){if(x.country&&countries.indexOf(x.country)<0)countries.push(x.country);});
     owners.sort(); countries.sort();
     var fo=document.getElementById("fOwner"),co=fo.value; fo.innerHTML='<option value="">All owners</option>'+owners.map(function(o){return '<option>'+esc(o)+'</option>';}).join(""); fo.value=co;
     var fs=document.getElementById("fStatus"),cs=fs.value; fs.innerHTML='<option value="">All statuses</option>'+STATUSES.map(function(s){return '<option>'+esc(s.label)+'</option>';}).join(""); fs.value=cs;
@@ -1213,7 +1260,7 @@
     saveAll();refreshOptions();render();closeMerch();
   }
   function delMerch(id){var x=merch.filter(function(m){return m.id===id;})[0];if(!x)return;askConfirm("Delete this merchant and its videos?",'"'+x.merchant+'"',function(){merch=merch.filter(function(m){return m.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Merchant deleted");},{danger:true,okLabel:"Delete"});}
-  function newEvent(){var e={id:uid("ev"),event:"",owner:"",priority:"Medium",status:"Not started",format:"",date:"",country:"",notes:"",info:"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};events.unshift(e);expanded[e.id]=true;saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="event"][data-id="'+e.id+'"]');if(ta)ta.focus();},50);}
+  function newEvent(partnerId){view="events";filters={q:"",status:defaultStatus("events"),prio:"",country:"",owner:"",channel:""};["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});var e={id:uid("ev"),event:"",owner:"",priority:"Medium",status:"Not started",format:"",date:"",country:"",notes:"",info:"",partnerId:partnerId||"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};events.unshift(e);expanded[e.id]=true;saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="event"][data-id="'+e.id+'"]');if(ta){ta.focus();var tr=ta.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},50);}
   function delEvent(id){var x=events.filter(function(e){return e.id===id;})[0];if(!x)return;askConfirm("Delete this event and its tasks?",'"'+(x.event||"Untitled event")+'"',function(){events=events.filter(function(e){return e.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Event deleted");},{danger:true,okLabel:"Delete"});}
 
   // ---- export / import ----
@@ -1245,7 +1292,7 @@
   function toggleTheme(){var cur=document.documentElement.getAttribute("data-theme");var dark=cur?cur==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);var n=dark?"light":"dark";try{localStorage.setItem(THEME_KEY,n);}catch(e){}applyTheme(n);}
 
   // ---- events ----
-  document.getElementById("newBtn").addEventListener("click",function(){view==="items"?openItem(null):view==="events"?newEvent():openMerch(null);});
+  document.getElementById("newBtn").addEventListener("click",function(){view==="items"?openItem(null):view==="events"?newEvent():view==="partners"?newPartner():openMerch(null);});
   document.getElementById("closeModal").addEventListener("click",closeItem);
   document.getElementById("cancelBtn").addEventListener("click",closeItem);
   document.getElementById("saveBtn").addEventListener("click",saveItem);
@@ -1279,7 +1326,7 @@
   var ownerRef=null;
   function openOwnerPop(btn){
     var kind=btn.getAttribute("data-kind"),id=btn.getAttribute("data-id");
-    var rec=(kind==="item"?items:kind==="event"?events:merch).filter(function(r){return r.id===id;})[0]; if(!rec)return;
+    var rec=(kind==="item"?items:kind==="event"?events:kind==="partner"?partners:merch).filter(function(r){return r.id===id;})[0]; if(!rec)return;
     ownerRef={rec:rec,btn:btn};
     var cur=String(rec.owner||"").split(",").map(function(s){return s.trim();}).filter(Boolean);
     var pop=document.getElementById("ownerpop");
@@ -1300,6 +1347,9 @@
     var md=e.target.closest("[data-mdel]");if(md){delMerch(md.getAttribute("data-mdel"));return;}
     var gc=e.target.closest("[data-gcal]");if(gc){var ge=events.filter(function(z){return z.id===gc.getAttribute("data-gcal");})[0];if(ge){if(!(ge.event||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalUrl(ge),"_blank","noopener");}return;}
     var ed=e.target.closest("[data-edel]");if(ed){delEvent(ed.getAttribute("data-edel"));return;}
+    var pd=e.target.closest("[data-pdel]");if(pd){delPartner(pd.getAttribute("data-pdel"));return;}
+    var aei=e.target.closest(".addeventinline");if(aei){newEvent(aei.getAttribute("data-pid"));return;}
+    var eo=e.target.closest("[data-eopen]");if(eo){var eoid=eo.getAttribute("data-eopen");view="events";filters={q:"",status:"",prio:"",country:"",owner:"",channel:""};expanded[eoid]=true;["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});render();setTimeout(function(){var b=document.querySelector('[data-exp="'+eoid+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);return;}
     var at=e.target.closest(".addtaskinline");if(at){var aeid=at.getAttribute("data-eid");var ae=events.filter(function(z){return z.id===aeid;})[0];if(ae){ae.tasks=ae.tasks||[];ae.tasks.push({id:uid("t"),task:"",owner:"",status:"Not started",due:"",notes:""});stamp(ae);expanded[aeid]=true;saveAll();render();}return;}
     var tgc=e.target.closest(".taskgcal");if(tgc){var ti=findET(tgc);if(ti.e&&ti.t){if(!(ti.t.task||"").trim()){toast("Add a task name first.",true);return;}window.open(gcalTaskUrl(ti.t,ti.e),"_blank","noopener");}return;}
     var trm=e.target.closest(".taskrm");if(trm){var tinfo=findET(trm);if(tinfo.e&&tinfo.t){tinfo.e.tasks=tinfo.e.tasks.filter(function(z){return z.id!==tinfo.t.id;});stamp(tinfo.e);saveAll();render();}return;}
@@ -1320,6 +1370,7 @@
     var n=e.target.closest(".vi-notes");if(n){var i1=findMV(n);if(i1.v){i1.v.notes=n.value;stamp(i1.m);saveAll();}return;}
     var l=e.target.closest(".vi-link");if(l){var i2=findMV(l);if(i2.v){i2.v.link=l.value;stamp(i2.m);saveAll();var cell=l.closest(".linkcell");var a=cell.querySelector(".vi-open");var u=safeUrl(l.value);if(u){a.href=u;a.style.display="";}else{a.style.display="none";}}return;}
     var evi=e.target.closest(".evinfo");if(evi){var ev2=events.filter(function(z){return z.id===evi.getAttribute("data-id");})[0];if(ev2){ev2.info=evi.value;stamp(ev2);saveAll();}return;}
+    var pin=e.target.closest(".pinfo");if(pin){var p2=partners.filter(function(z){return z.id===pin.getAttribute("data-id");})[0];if(p2){p2.info=pin.value;stamp(p2);saveAll();}return;}
     var tkt=e.target.closest(".tk-task");if(tkt){var q1=findET(tkt);if(q1.t){q1.t.task=tkt.value;stamp(q1.e);saveAll();}return;}
     var tko=e.target.closest(".tk-owner");if(tko){var q2=findET(tko);if(q2.t){q2.t.owner=tko.value;stamp(q2.e);saveAll();}return;}
     var tkn=e.target.closest(".tk-notes");if(tkn){var q3=findET(tkn);if(q3.t){q3.t.notes=tkn.value;stamp(q3.e);saveAll();}return;}
