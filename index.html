@@ -1163,7 +1163,7 @@
     function blank(){return {total:0,open:0,inprog:0,blocked:0,notstarted:0,done:0};}
     function tally(p,x){p.total++; if(isOpen(x))p.open++; if(x.status==="In progress")p.inprog++; if(x.status==="Blocked")p.blocked++; if(x.status==="Not started")p.notstarted++; if(x.status==="Done")p.done++;}
     var people={}, team=blank();
-    recs.forEach(function(x){ tally(team,x); var os=ownersOf(x); if(!os.length)os=["— Unassigned —"]; os.forEach(function(n){ if(!people[n])people[n]=blank(); tally(people[n],x); }); });
+    recs.forEach(function(x){ tally(team,x); var os=ownersOf(x); os.forEach(function(n){ if(!people[n])people[n]=blank(); tally(people[n],x); }); });
     var names=Object.keys(people).sort(function(a,b){return people[b].open-people[a].open || people[b].total-people[a].total;});
     function tile(label,n,cls){return '<div class="rtile"><div class="rn '+(cls||"")+'">'+n+'</div><div class="rl">'+esc(label)+'</div></div>';}
     function num(n,cls){return n>0?'<span class="rcount '+(cls||"")+'">'+n+'</span>':'<span class="rzero">0</span>';}
