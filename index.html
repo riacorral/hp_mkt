@@ -190,7 +190,7 @@
   .cellin:hover{border-color:var(--border)}
   .cellin:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); background:var(--surface)}
   .cellin::placeholder{color:var(--ink-3)}
-  .cell-title{font-weight:600; letter-spacing:-.01em; font-size:14px; line-height:1.3; resize:none; overflow:hidden; white-space:pre-wrap; word-break:break-word; min-height:0}
+  .cell-title{font-weight:600; letter-spacing:-.01em; font-size:13px; line-height:1.25; resize:none; overflow:hidden; white-space:pre-wrap; word-break:normal; overflow-wrap:break-word; min-height:0}
   textarea.celltxt{font-family:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--border-strong); border-radius:4px; background:var(--surface-2); color:var(--ink); width:100%; min-height:52px; resize:vertical; line-height:1.45}
   textarea.celltxt:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); background:var(--surface)}
   .c-notes textarea.celltxt{min-height:80px}
@@ -238,11 +238,11 @@
   thead th.sortable{cursor:pointer; user-select:none}
   thead th.sortable:hover{color:var(--ink)}
   .sarr{margin-left:4px; font-size:9px; color:var(--accent); vertical-align:1px}
-  tbody td{padding:13px 14px; border-bottom:1px solid var(--border); vertical-align:top}
+  tbody td{padding:9px 11px; border-bottom:1px solid var(--border); vertical-align:top}
   tbody tr.main:hover{background:var(--surface-2)}
   .c-item{max-width:340px}
   .c-item .title{font-weight:600; letter-spacing:-.01em; color:var(--ink)}
-  .c-item .meta{font-size:11px; color:var(--ink-3); margin-top:4px; padding-left:9px; font-variant-numeric:tabular-nums}
+  .c-item .meta{font-size:10px; color:var(--ink-3); margin-top:3px; padding-left:9px; line-height:1.3; font-variant-numeric:tabular-nums}
   .c-item .meta.metasub{margin-top:1px}
   .cell-date{min-width:140px}
   .datewrap{display:flex; align-items:center; gap:4px}
@@ -599,7 +599,7 @@
   ];
   var PRIOS=["High","Medium","Low"];
   var CTYPES=["Merchant","Brand","Partnership"];
-  var EVENT_TYPES=["Demo Night","Workshop","Task","Shoot","Expo","Other"];
+  var EVENT_TYPES=["Demo Night","Workshop","Task","Shoot","Expo","Partnership","Other"];
   var CHANNELS=[{code:"IG",name:"Instagram"},{code:"TK",name:"TikTok"},{code:"FB",name:"Facebook"},{code:"LI",name:"LinkedIn"},{code:"YT",name:"YouTube"},{code:"YTS",name:"YouTube Shorts"},{code:"WA",name:"WhatsApp"},{code:"EDM",name:"Email (EDM)"}];
   var FLAG={"Philippines":"🇵🇭","Singapore":"🇸🇬","Malaysia":"🇲🇾"};
 
@@ -922,7 +922,7 @@
 
   // ---- merchant table ----
   function ctypeSel(id,val){return '<select class="cellsel" data-kind="merch" data-id="'+esc(id)+'" data-f="ctype"><option value=""'+(val?"":" selected")+'>—</option>'+CTYPES.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
-  function thMerch(){var nm=(view==="content")?"Content":"Merchant";return '<tr><th class="c-exp"></th>'+sth(view,"merchant",nm,'width:20%')+sth(view,"owner","Owner")+sth(view,"status","Status")+(view==="content"?sth(view,"ctype","Type"):"")+sth(view,"country","Country")+'<th style="width:22%">Notes</th><th>Drive</th><th>Script</th><th style="text-align:right">Actions</th></tr>';}
+  function thMerch(){var nm=(view==="content")?"Content":"Merchant";return '<tr><th class="c-exp"></th>'+sth(view,"merchant",nm,'width:22%')+sth(view,"owner","Owner")+sth(view,"status","Status")+(view==="content"?sth(view,"ctype","Type"):"")+sth(view,"country","Country")+'<th style="width:22%">Notes</th><th>Drive</th><th>Script</th><th style="text-align:right">Actions</th></tr>';}
   function chanChip(code){var name=(CHANNELS.filter(function(c){return c.code===code;})[0]||{}).name||code; return '<span class="chan '+esc(code)+'" title="'+esc(name)+'">'+esc(code)+'</span>';}
   var CH_CARET='<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg>';
   function chanChipsOnly(v){return (v.channels&&v.channels.length)?v.channels.map(function(c){return chanChip(c);}).join(" "):'<span class="chanplace">＋ Channels</span>';}
@@ -997,7 +997,7 @@
 
   // ---- events table ----
   function etypeSel(id,val){return '<select class="cellsel" data-kind="event" data-id="'+esc(id)+'" data-f="etype"><option value=""'+(val?"":" selected")+'>—</option>'+EVENT_TYPES.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
-  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:22%')+sth("events","owner","Owner")+sth("events","status","Status")+sth("events","etype","Type")+sth("events","format","Format")+sth("events","date","Date")+sth("events","country","Country")+'<th>Project</th><th style="width:20%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:24%')+sth("events","owner","Owner")+sth("events","status","Status")+sth("events","etype","Type")+sth("events","format","Format")+sth("events","date","Date")+sth("events","country","Country")+'<th>Project</th><th style="width:20%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function eventDateCell(x){var d=isValidDate(x.date)?x.date:"";var over=d && d<today() && isOpen(x);return '<div class="datewrap">'+(over?'<span class="odflag" title="Passed">⚠</span>':'')+'<input class="cellin cell-date'+(over?" overdue":"")+'" type="date" data-kind="event" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'" title="'+(over?"Event date passed":"Event date")+'"></div>';}
   var TASKDEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
   function tasksPanel(x){
