@@ -1138,11 +1138,21 @@
       '<td>'+prStatusSel(x.id,x.status)+'</td>'+
       '<td style="min-width:150px">'+prLinkCell(x)+'</td>'+
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
-      '<td class="c-actions"><button class="icon-btn gcalbtn" data-prgcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-prdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
+      '<td class="c-actions"><button class="icon-btn" data-prconv="'+esc(x.id)+'" title="Convert to Event" aria-label="Convert to Event"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button class="icon-btn gcalbtn" data-prgcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-prdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
   }
   function newProspect(){var p={id:uid("pr"),name:"",ptype:"",tier:"",date:"",endDate:"",country:"",venue:"",url:"",status:"Considering",owner:"",notes:"",added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};prospects.unshift(p);saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="prospect"][data-id="'+p.id+'"]');if(ta)ta.focus();},50);}
   function delProspect(id){var x=prospects.filter(function(p){return p.id===id;})[0];if(!x)return;askConfirm("Delete this prospect?",'"'+(x.name||"Untitled")+'"',function(){prospects=prospects.filter(function(p){return p.id!==id;});saveAll();refreshOptions();render();toast("Prospect deleted");},{danger:true,okLabel:"Delete"});}
+  function convertToEvent(id){var p=prospects.filter(function(z){return z.id===id;})[0];if(!p)return;
+    askConfirm("Convert to a confirmed Event?",'"'+(p.name||"Untitled")+'" will be added to Events (kept here, marked Going).',function(){
+      var notes=[p.notes,p.venue?("Venue: "+p.venue):"",p.url?("Source: "+p.url):""].filter(Boolean).join("\n");
+      var e={id:uid("ev"),event:p.name||"",owner:"",priority:"Medium",status:"Not started",etype:(p.ptype==="Expo"?"Expo":"Other"),format:"Physical",date:isValidDate(p.date)?p.date:"",country:p.country||"",notes:notes,info:(p.url||""),partnerId:"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};
+      events.unshift(e); p.status="Going"; stamp(p);
+      expanded[e.id]=true; view="events"; filters={q:"",status:defaultStatus("events"),prio:"",country:"",owner:"",channel:"",xtype:""}; ["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});
+      saveAll(); refreshOptions(); render(); toast("Converted to Event — prospect marked Going");
+      setTimeout(function(){var b=document.querySelector('[data-exp="'+e.id+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);
+    },{okLabel:"Convert"});
+  }
 
   function syncTypeFilter(){
     var f=document.getElementById("fType");
@@ -1210,7 +1220,11 @@
       if(calTypeOk("task")) (e.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"task",id:e.id,title:t.task||"Untitled task",channels:[],status:t.status}); });
     });
       if(calTypeOk("ptask")) partners.forEach(function(p){ (p.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"ptask",id:p.id,title:t.task||"Untitled task",channels:[],status:t.status}); }); });
-      if(calTypeOk("prospect")) prospects.forEach(function(p){ if(!isValidDate(p.date))return; if(p.status==="Declined")return; (map[p.date]=map[p.date]||[]).push({kind:"prospect",id:p.id,title:p.name||"Untitled",channels:[],status:p.status}); });
+      if(calTypeOk("prospect")) prospects.forEach(function(p){ if(!isValidDate(p.date))return; if(p.status==="Declined")return;
+        var end=isValidDate(p.endDate)&&p.endDate>=p.date?p.endDate:p.date;
+        var d=new Date(p.date+"T00:00:00"), ed=new Date(end+"T00:00:00"), guard=0;
+        while(d<=ed && guard++<70){ var ds=fmtDate(d.getFullYear(),d.getMonth(),d.getDate()); (map[ds]=map[ds]||[]).push({kind:"prospect",id:p.id,title:p.name||"Untitled",channels:[],status:p.status}); d.setDate(d.getDate()+1); }
+      });
     }
     return map;
   }
@@ -1455,6 +1469,7 @@
     var gc=e.target.closest("[data-gcal]");if(gc){var ge=events.filter(function(z){return z.id===gc.getAttribute("data-gcal");})[0];if(ge){if(!(ge.event||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalUrl(ge),"_blank","noopener");}return;}
     var ed=e.target.closest("[data-edel]");if(ed){delEvent(ed.getAttribute("data-edel"));return;}
     var pd=e.target.closest("[data-pdel]");if(pd){delPartner(pd.getAttribute("data-pdel"));return;}
+    var prc=e.target.closest("[data-prconv]");if(prc){convertToEvent(prc.getAttribute("data-prconv"));return;}
     var prd=e.target.closest("[data-prdel]");if(prd){delProspect(prd.getAttribute("data-prdel"));return;}
     var prg=e.target.closest("[data-prgcal]");if(prg){var pe=prospects.filter(function(z){return z.id===prg.getAttribute("data-prgcal");})[0];if(pe){if(!(pe.name||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalProspectUrl(pe),"_blank","noopener");}return;}
     var aei=e.target.closest(".addeventinline");if(aei){newEvent(aei.getAttribute("data-pid"));return;}
