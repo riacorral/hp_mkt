@@ -243,6 +243,13 @@
   .cl-items .calev{min-width:170px; max-width:280px}
   .cl-empty{padding:24px; text-align:center; color:var(--ink-3)}
   tr.rowflash > td{background:var(--accent-soft)}
+  .calcell{cursor:pointer}
+  .quickpop{position:fixed; z-index:60; width:250px; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:0 14px 34px rgba(0,0,0,.2); padding:11px; display:flex; flex-direction:column; gap:8px}
+  .quickpop .qa-date{font-size:12px; font-weight:600; color:var(--ink-2)}
+  .quickpop .qa-in{width:100%; padding:8px 9px; border:1px solid var(--border-strong); border-radius:6px; font:inherit; font-size:14px; background:var(--surface-2); color:var(--ink)}
+  .quickpop .qa-row{display:flex; gap:8px}
+  .quickpop .qa-sel{flex:1; min-width:0; padding:7px 8px; border:1px solid var(--border-strong); border-radius:6px; font:inherit; font-size:13px; background:var(--surface-2); color:var(--ink)}
+  .quickpop .qa-btn{padding:7px 14px}
   .maybetag{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
   .tsktag{color:var(--cal-task-fg); border-color:var(--cal-task-fg)}
   .vidtag{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
@@ -513,6 +520,7 @@
       <button class="icon-btn" id="calNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       <button class="ghost" id="calToday">Today</button>
       <button class="ghost" id="calViewToggle">List view</button>
+      <button class="primary" id="calNewEvent" style="padding:6px 12px">+ New event</button>
       <div class="tabmore-wrap"><button class="filter" id="calTypeBtn" type="button">All types <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg></button><div class="tabmore-menu" id="calTypeMenu" hidden></div></div>
       <div class="tabmore-wrap"><button class="filter" id="calCountryBtn" type="button">All countries <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg></button><div class="tabmore-menu" id="calCountryMenu" hidden></div></div>
       <select class="filter" id="calChannel"><option value="">All channels</option></select>
@@ -601,6 +609,11 @@
 
 <div id="chanpop" class="chanpop"></div>
 <div id="ownerpop" class="chanpop"></div>
+<div id="quickpop" class="quickpop" hidden>
+  <div class="qa-date" id="qaDate"></div>
+  <input id="qaTitle" type="text" class="qa-in" placeholder="Event title">
+  <div class="qa-row"><select id="qaType" class="qa-sel"></select><button id="qaAdd" class="primary qa-btn">Add</button></div>
+</div>
 <div id="toast"></div>
 
 <script>
@@ -1298,6 +1311,7 @@
       var evs=map[ds]||[];
       var cell=document.createElement("div");
       cell.className="calcell"+(dt.getMonth()!==calM?" out":"")+(ds===todayStr?" today":"");
+      cell.setAttribute("data-date",ds);
       var html='<div class="caldate">'+dt.getDate()+'</div>';
       evs.forEach(function(ev){ html+=calChipHtml(ev); });
       cell.innerHTML=html;
@@ -1584,10 +1598,34 @@
   document.getElementById("calPrev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}renderCalendar();});
   document.getElementById("calNext").addEventListener("click",function(){calM++;if(calM>11){calM=0;calY++;}renderCalendar();});
   document.getElementById("calToday").addEventListener("click",function(){var d=new Date();calY=d.getFullYear();calM=d.getMonth();renderCalendar();});
-  function onCalClick(e){var ev=e.target.closest(".calev");if(!ev)return;calOpen(ev.getAttribute("data-kind"),ev.getAttribute("data-id"));}
+  function onCalClick(e){var ev=e.target.closest(".calev");if(ev){calOpen(ev.getAttribute("data-kind"),ev.getAttribute("data-id"));return;}var cell=e.target.closest(".calcell");if(cell&&cell.getAttribute("data-date")){e.stopPropagation();openQuickAdd(cell);}}
+  var qaDate="";
+  function openQuickAdd(cell){
+    qaDate=cell.getAttribute("data-date");
+    var pop=document.getElementById("quickpop");
+    document.getElementById("qaDate").textContent=prettyDate(qaDate);
+    document.getElementById("qaType").innerHTML='<option value="">Event</option>'+EVENT_TYPES.map(function(t){return '<option>'+esc(t)+'</option>';}).join("");
+    document.getElementById("qaTitle").value="";
+    pop.hidden=false;
+    var r=cell.getBoundingClientRect(),w=250,h=150;
+    pop.style.left=Math.max(8,Math.min(r.left,window.innerWidth-w-8))+"px";
+    pop.style.top=Math.max(8,Math.min(r.top,window.innerHeight-h-8))+"px";
+    setTimeout(function(){document.getElementById("qaTitle").focus();},20);
+  }
+  function closeQuickAdd(){document.getElementById("quickpop").hidden=true;qaDate="";}
+  function quickAddEvent(){
+    var title=document.getElementById("qaTitle").value.trim(); if(!title){document.getElementById("qaTitle").focus();return;}
+    var etype=document.getElementById("qaType").value;
+    var e={id:uid("ev"),event:title,owner:"",priority:"Medium",status:"Not started",etype:etype,format:"",date:qaDate,country:"",notes:"",info:"",partnerId:"",contentId:"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};
+    events.unshift(e); saveAll(); refreshOptions(); closeQuickAdd(); renderCalendar(); toast("Event added to "+prettyDate(qaDate||e.date));
+  }
   document.getElementById("calGrid").addEventListener("click",onCalClick);
   document.getElementById("calList").addEventListener("click",onCalClick);
   document.getElementById("calViewToggle").addEventListener("click",function(){calMode=(calMode==="list")?"month":"list";renderCalendar();});
+  document.getElementById("calNewEvent").addEventListener("click",function(){newEvent();});
+  document.getElementById("quickpop").addEventListener("click",function(e){e.stopPropagation();});
+  document.getElementById("qaAdd").addEventListener("click",quickAddEvent);
+  document.getElementById("qaTitle").addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();quickAddEvent();}else if(e.key==="Escape"){closeQuickAdd();}});
   document.getElementById("fCountry").addEventListener("change",function(){filters.country=this.value;render();});
   document.getElementById("clearBtn").addEventListener("click",function(){filters={q:"",status:defaultStatus(view),prio:"",country:"",owner:"",channel:"",xtype:""};["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var e=document.getElementById(idv);if(e)e.value="";});render();});
 
@@ -1598,7 +1636,7 @@
     else { sort[view]={key:key,dir:1}; }
     render();
   });
-  document.addEventListener("click",function(){closeChanPop();closeOwnerPop();Array.prototype.forEach.call(document.querySelectorAll(".tabmore-menu"),function(mm){if(!mm.hidden)mm.hidden=true;});});
+  document.addEventListener("click",function(){closeChanPop();closeOwnerPop();closeQuickAdd();Array.prototype.forEach.call(document.querySelectorAll(".tabmore-menu"),function(mm){if(!mm.hidden)mm.hidden=true;});});
   document.getElementById("bugBtn").addEventListener("click",function(){document.getElementById("bugOverlay").classList.add("open");renderBugs();setTimeout(function(){document.getElementById("bugText").focus();},40);});
   document.getElementById("bugClose").addEventListener("click",function(){document.getElementById("bugOverlay").classList.remove("open");});
   document.getElementById("bugOverlay").addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");});
