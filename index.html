@@ -708,7 +708,7 @@
       if(!e.added)e.added=e.updated||"—"; if(e.addedBy===undefined)e.addedBy=""; if(e.updatedBy===undefined)e.updatedBy="";
       if(e.priority===undefined)e.priority="Medium"; if(e.status===undefined)e.status="Not started"; if(e.notes===undefined)e.notes=""; if(e.info===undefined)e.info=""; if(e.format===undefined)e.format="";
       if(e.country){var ec=CNORM[String(e.country).trim().toLowerCase()]; if(ec)e.country=ec;}
-      if(e.partnerId===undefined)e.partnerId=""; if(e.etype===undefined)e.etype="";
+      if(e.partnerId===undefined)e.partnerId=""; if(e.etype===undefined)e.etype=""; if(e.contentId===undefined)e.contentId="";
     });
     partners.forEach(function(p){
       if(p.partner===undefined)p.partner=String(p.name||"");
@@ -719,7 +719,8 @@
     });
     // Drop dangling event→partner links.
     var pids={}; partners.forEach(function(p){pids[p.id]=1;});
-    events.forEach(function(e){ if(e.partnerId && !pids[e.partnerId]) e.partnerId=""; });
+    var cids={}; content.forEach(function(c){cids[c.id]=1;});
+    events.forEach(function(e){ if(e.partnerId && !pids[e.partnerId]) e.partnerId=""; if(e.contentId && !cids[e.contentId]) e.contentId=""; });
     prospects.forEach(function(p){
       if(!p.id)p.id=uid("pr");
       if(p.name===undefined)p.name=String(p.event||"");
@@ -995,7 +996,7 @@
       '<td style="min-width:160px">'+scriptCell+'</td>'+
       '<td class="c-actions">'+(view==="content"?'<button class="icon-btn" data-cconv="'+esc(x.id)+'" title="Send to Events as Shoot" aria-label="Send to Events as Shoot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>':'')+'<button class="icon-btn" data-mdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
-    var sub= open? '<tr class="subrow"><td colspan="'+(view==="content"?10:9)+'"><div class="subwrap"><div class="subhead">Final content'+(vc?' · '+vc:'')+'</div>'+videosPanel(x)+'</div></td></tr>' : '';
+    var sub= open? '<tr class="subrow"><td colspan="'+(view==="content"?10:9)+'"><div class="subwrap"><div class="subhead">Final content'+(vc?' · '+vc:'')+'</div>'+videosPanel(x)+(view==="content"?linkedEventsHtml(x.id):'')+'</div></td></tr>' : '';
     return main+sub;
   }
 
@@ -1088,13 +1089,16 @@
       '<td class="c-actions"><button class="icon-btn gcalbtn" data-gcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-edel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
     var info='<div class="infowrap"><div class="subhead">Partners &amp; general info</div><textarea class="evinfo celltxt" data-id="'+esc(x.id)+'" placeholder="Partners, sponsors, contacts, venue, budget, links, general info…">'+esc(x.info||"")+'</textarea></div>';
-    var sub= open? '<tr class="subrow"><td colspan="11"><div class="subwrap">'+info+'<div class="subhead" style="margin-top:16px">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
+    var src=x.contentId?('<div class="subhead">From content</div><div class="vidpanel"><table class="vids"><tbody><tr class="plink" data-copen="'+esc(x.contentId)+'"><td>'+esc(contentName(x.contentId))+'</td><td style="width:70px;text-align:right"><span class="popen">open ↗</span></td></tr></tbody></table></div>'):'';
+    var sub= open? '<tr class="subrow"><td colspan="11"><div class="subwrap">'+src+info+'<div class="subhead" style="margin-top:16px">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
     return main+sub;
   }
   function findET(el){var ee=el.closest("[data-eid]");var eid=ee?ee.getAttribute("data-eid"):null;var tr=el.closest("[data-tid]");var tid=tr?tr.getAttribute("data-tid"):null;var ev=events.concat(partners).filter(function(z){return z.id===eid;})[0];var t=(ev&&tid)?(ev.tasks||[]).filter(function(z){return z.id===tid;})[0]:null;return {e:ev,t:t};}
 
   // ---- partnerships ----
   function partnerName(id){var p=partners.filter(function(z){return z.id===id;})[0];return p?(p.partner||"Untitled"):"";}
+  function contentName(id){var c=content.filter(function(z){return z.id===id;})[0];return c?(c.merchant||"Untitled"):"";}
+  function linkedEventsHtml(cid){var le=events.filter(function(e){return e.contentId===cid;});if(!le.length)return '';var rows=le.map(function(e){var d=isValidDate(e.date)?e.date:"—";return '<tr class="plink" data-eopen="'+esc(e.id)+'"><td>'+esc(e.event||"Untitled event")+'</td><td style="width:120px">'+esc(d)+'</td><td style="width:70px;text-align:right"><span class="popen">open ↗</span></td></tr>';}).join("");return '<div class="subhead" style="margin-top:16px">Linked events · '+le.length+'</div><div class="vidpanel"><table class="vids"><tbody>'+rows+'</tbody></table></div>';}
   function partnerSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="partnerId"><option value=""'+(val?"":" selected")+'>—</option>'+partners.map(function(p){return '<option value="'+esc(p.id)+'"'+(p.id===val?" selected":"")+'>'+esc(p.partner||"Untitled")+'</option>';}).join("")+'</select>';}
   function thPartners(){return '<tr><th class="c-exp"></th>'+sth("partners","partner","Project",'width:24%')+sth("partners","owner","Owner")+sth("partners","status","Status")+sth("partners","country","Country")+'<th style="width:26%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function rowPartner(x){
@@ -1146,9 +1150,12 @@
   }
   function newProspect(){var p={id:uid("pr"),name:"",ptype:"",tier:"",date:"",endDate:"",country:"",venue:"",url:"",status:"Considering",owner:"",notes:"",added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};prospects.unshift(p);saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="prospect"][data-id="'+p.id+'"]');if(ta)ta.focus();},50);}
   function delProspect(id){var x=prospects.filter(function(p){return p.id===id;})[0];if(!x)return;askConfirm("Delete this prospect?",'"'+(x.name||"Untitled")+'"',function(){prospects=prospects.filter(function(p){return p.id!==id;});saveAll();refreshOptions();render();toast("Prospect deleted");},{danger:true,okLabel:"Delete"});}
+  function openEventById(eid){view="events";filters={q:"",status:"",prio:"",country:"",owner:"",channel:"",xtype:""};expanded[eid]=true;["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});render();setTimeout(function(){var b=document.querySelector('[data-exp="'+eid+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);}
   function convertContentToEvent(id){var x=content.filter(function(z){return z.id===id;})[0];if(!x)return;
-    askConfirm("Send to Events as a Shoot?",'"'+(x.merchant||"Untitled")+'" will be added to Events (Type: Shoot). It stays in Content too.',function(){
-      var e={id:uid("ev"),event:x.merchant||"",owner:x.owner||"",priority:"Medium",status:"Not started",etype:"Shoot",format:"Physical",date:"",country:x.country||"",notes:x.notes||"",info:"",partnerId:"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};
+    var existing=events.filter(function(e){return e.contentId===id;})[0];
+    if(existing){ openEventById(existing.id); toast("Opened the linked event"); return; }
+    askConfirm("Send to Events as a Shoot?",'"'+(x.merchant||"Untitled")+'" will be added to Events (Type: Shoot), linked back to this content.',function(){
+      var e={id:uid("ev"),event:x.merchant||"",owner:x.owner||"",priority:"Medium",status:"Not started",etype:"Shoot",format:"Physical",date:"",country:x.country||"",notes:x.notes||"",info:"",partnerId:"",contentId:id,tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};
       events.unshift(e); expanded[e.id]=true; view="events"; filters={q:"",status:defaultStatus("events"),prio:"",country:"",owner:"",channel:"",xtype:""}; ["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});
       saveAll(); refreshOptions(); render(); toast("Added to Events as a Shoot");
       setTimeout(function(){var b=document.querySelector('[data-exp="'+e.id+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);
@@ -1402,7 +1409,7 @@
     else{rec.id=uid("m");rec.videos=[];targetArr.unshift(rec);expanded[rec.id]=true;toast((isC?"Content":"Merchant")+" created — expand ▸ to add videos");}
     saveAll();refreshOptions();render();closeMerch();
   }
-  function delMerch(id){var x=mcById(id);if(!x)return;var isC=content.indexOf(x)>=0;askConfirm("Delete this "+(isC?"content item":"merchant")+" and its videos?",'"'+(x.merchant||"Untitled")+'"',function(){merch=merch.filter(function(m){return m.id!==id;});content=content.filter(function(m){return m.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast((isC?"Content":"Merchant")+" deleted");},{danger:true,okLabel:"Delete"});}
+  function delMerch(id){var x=mcById(id);if(!x)return;var isC=content.indexOf(x)>=0;askConfirm("Delete this "+(isC?"content item":"merchant")+" and its videos?",'"'+(x.merchant||"Untitled")+'"',function(){merch=merch.filter(function(m){return m.id!==id;});content=content.filter(function(m){return m.id!==id;});events.forEach(function(e){if(e.contentId===id)e.contentId="";});delete expanded[id];saveAll();refreshOptions();render();toast((isC?"Content":"Merchant")+" deleted");},{danger:true,okLabel:"Delete"});}
   function newEvent(partnerId){view="events";filters={q:"",status:defaultStatus("events"),prio:"",country:"",owner:"",channel:""};["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});var e={id:uid("ev"),event:"",owner:"",priority:"Medium",status:"Not started",etype:"",format:"",date:"",country:"",notes:"",info:"",partnerId:partnerId||"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};events.unshift(e);expanded[e.id]=true;saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="event"][data-id="'+e.id+'"]');if(ta){ta.focus();var tr=ta.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},50);}
   function delEvent(id){var x=events.filter(function(e){return e.id===id;})[0];if(!x)return;askConfirm("Delete this event and its tasks?",'"'+(x.event||"Untitled event")+'"',function(){events=events.filter(function(e){return e.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Event deleted");},{danger:true,okLabel:"Delete"});}
 
@@ -1496,6 +1503,7 @@
     var prd=e.target.closest("[data-prdel]");if(prd){delProspect(prd.getAttribute("data-prdel"));return;}
     var prg=e.target.closest("[data-prgcal]");if(prg){var pe=prospects.filter(function(z){return z.id===prg.getAttribute("data-prgcal");})[0];if(pe){if(!(pe.name||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalProspectUrl(pe),"_blank","noopener");}return;}
     var aei=e.target.closest(".addeventinline");if(aei){newEvent(aei.getAttribute("data-pid"));return;}
+    var co=e.target.closest("[data-copen]");if(co){var coid=co.getAttribute("data-copen");view="content";filters={q:"",status:"",prio:"",country:"",owner:"",channel:"",xtype:""};expanded[coid]=true;["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});render();setTimeout(function(){var b=document.querySelector('[data-exp="'+coid+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);return;}
     var eo=e.target.closest("[data-eopen]");if(eo){var eoid=eo.getAttribute("data-eopen");view="events";filters={q:"",status:"",prio:"",country:"",owner:"",channel:""};expanded[eoid]=true;["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});render();setTimeout(function(){var b=document.querySelector('[data-exp="'+eoid+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);return;}
     var at=e.target.closest(".addtaskinline");if(at){var aeid=at.getAttribute("data-eid");var ae=events.concat(partners).filter(function(z){return z.id===aeid;})[0];if(ae){ae.tasks=ae.tasks||[];ae.tasks.push({id:uid("t"),task:"",owner:"",status:"Not started",due:"",notes:""});stamp(ae);expanded[aeid]=true;saveAll();render();}return;}
     var tgc=e.target.closest(".taskgcal");if(tgc){var ti=findET(tgc);if(ti.e&&ti.t){if(!(ti.t.task||"").trim()){toast("Add a task name first.",true);return;}window.open(gcalTaskUrl(ti.t,ti.e),"_blank","noopener");}return;}
