@@ -771,7 +771,7 @@
   function scheduledCount(all){var n=0;mcAll().forEach(function(m){(m.videos||[]).forEach(function(v){if(all||v.date)n++;});});if(!all){events.forEach(function(e){if(isValidDate(e.date))n++;});partners.forEach(function(p){(p.tasks||[]).forEach(function(t){if(isValidDate(t.due))n++;});});events.forEach(function(e){(e.tasks||[]).forEach(function(t){if(isValidDate(t.due))n++;});});}return n;}
   function renderTabs(){
     var el=document.getElementById("tabs"); el.innerHTML=""; el.className="tabs "+(view==="items"?"tabs-items":view==="merch"?"tabs-merch":view==="content"?"tabs-content":view==="vids"?"tabs-vids":view==="events"?"tabs-events":view==="partners"?"tabs-partners":view==="report"?"tabs-report":"tabs-cal");
-    [{k:"items",l:"Action items",n:items.length},{k:"merch",l:"Merchant",n:merch.length},{k:"content",l:"Content",n:content.length},{k:"events",l:"Events",n:events.length},{k:"partners",l:"Partnerships",n:partners.length},{k:"vids",l:"All videos",n:scheduledCount(true)},{k:"cal",l:"Calendar",n:scheduledCount()},{k:"report",l:"Analytics",n:null}].forEach(function(t){
+    [{k:"items",l:"Action items",n:items.length},{k:"merch",l:"Merchant",n:merch.length},{k:"content",l:"Content",n:content.length},{k:"events",l:"Events",n:events.length},{k:"partners",l:"Projects",n:partners.length},{k:"vids",l:"All videos",n:scheduledCount(true)},{k:"cal",l:"Calendar",n:scheduledCount()},{k:"report",l:"Analytics",n:null}].forEach(function(t){
       var b=document.createElement("button");
       b.className="tab"+(view===t.k?" active":""); b.setAttribute("role","tab"); b.setAttribute("aria-selected",view===t.k?"true":"false");
       b.innerHTML=esc(t.l)+(t.n===null?'':' <span class="cnt">'+t.n+'</span>');
@@ -785,7 +785,7 @@
     var list=currentList();
     var defs=[ view==="items"
       ? {key:"__open__",label:"Open items",n:list.filter(isOpen).length}
-      : {key:"",label:view==="events"?"All events":view==="partners"?"All partnerships":view==="content"?"All content":"All merchants",n:list.length} ];
+      : {key:"",label:view==="events"?"All events":view==="partners"?"All projects":view==="content"?"All content":"All merchants",n:list.length} ];
     ["In progress","Blocked","Not started","Done"].forEach(function(s){
       defs.push({key:s,label:s,n:list.filter(function(x){return x.status===s;}).length});
     });
@@ -970,7 +970,7 @@
   }
 
   // ---- events table ----
-  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:22%')+sth("events","owner","Owner")+sth("events","priority","Priority")+sth("events","status","Status")+sth("events","format","Format")+sth("events","date","Date")+sth("events","country","Country")+'<th>Partner</th><th style="width:20%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:22%')+sth("events","owner","Owner")+sth("events","priority","Priority")+sth("events","status","Status")+sth("events","format","Format")+sth("events","date","Date")+sth("events","country","Country")+'<th>Project</th><th style="width:20%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function eventDateCell(x){var d=isValidDate(x.date)?x.date:"";var over=d && d<today() && isOpen(x);return '<div class="datewrap">'+(over?'<span class="odflag" title="Passed">⚠</span>':'')+'<input class="cellin cell-date'+(over?" overdue":"")+'" type="date" data-kind="event" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'" title="'+(over?"Event date passed":"Event date")+'"></div>';}
   var TASKDEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
   function tasksPanel(x){
@@ -1037,14 +1037,14 @@
   // ---- partnerships ----
   function partnerName(id){var p=partners.filter(function(z){return z.id===id;})[0];return p?(p.partner||"Untitled"):"";}
   function partnerSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="partnerId"><option value=""'+(val?"":" selected")+'>—</option>'+partners.map(function(p){return '<option value="'+esc(p.id)+'"'+(p.id===val?" selected":"")+'>'+esc(p.partner||"Untitled")+'</option>';}).join("")+'</select>';}
-  function thPartners(){return '<tr><th class="c-exp"></th>'+sth("partners","partner","Partner",'width:24%')+sth("partners","owner","Owner")+sth("partners","priority","Priority")+sth("partners","status","Status")+sth("partners","country","Country")+'<th style="width:26%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function thPartners(){return '<tr><th class="c-exp"></th>'+sth("partners","partner","Project",'width:24%')+sth("partners","owner","Owner")+sth("partners","priority","Priority")+sth("partners","status","Status")+sth("partners","country","Country")+'<th style="width:26%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function rowPartner(x){
     var open=!!expanded[x.id];
     var linked=events.filter(function(e){return e.partnerId===x.id;});
     var lc=linked.length;
     var main='<tr class="main" data-kind="partner" data-id="'+esc(x.id)+'">'+
       '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
-      '<td class="c-item"><textarea class="cellin cell-title" data-kind="partner" data-id="'+esc(x.id)+'" data-f="partner" rows="1" placeholder="Partner name">'+esc(x.partner||"")+'</textarea>'+metaLine(x,lc?' · '+lc+' event'+(lc>1?"s":""):"")+'</td>'+
+      '<td class="c-item"><textarea class="cellin cell-title" data-kind="partner" data-id="'+esc(x.id)+'" data-f="partner" rows="1" placeholder="Project name">'+esc(x.partner||"")+'</textarea>'+metaLine(x,lc?' · '+lc+' event'+(lc>1?"s":""):"")+'</td>'+
       '<td>'+ownerCell("partner",x.id,x.owner)+'</td>'+
       '<td>'+prioSel("partner",x.id,x.priority)+'</td>'+
       '<td>'+statusControl(x,"partner")+'</td>'+
@@ -1052,7 +1052,7 @@
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="partner" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
       '<td class="c-actions"><button class="icon-btn" data-pdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
-    var info='<div class="infowrap"><div class="subhead">Partnership details</div><textarea class="pinfo celltxt" data-id="'+esc(x.id)+'" placeholder="Contacts, terms, value, links, general info…">'+esc(x.info||"")+'</textarea></div>';
+    var info='<div class="infowrap"><div class="subhead">Project details</div><textarea class="pinfo celltxt" data-id="'+esc(x.id)+'" placeholder="Contacts, terms, value, links, general info…">'+esc(x.info||"")+'</textarea></div>';
     var elist=linked.map(function(e){var d=isValidDate(e.date)?e.date:"—";return '<tr class="plink" data-eopen="'+esc(e.id)+'"><td>'+esc(e.event||"Untitled event")+'</td><td style="width:120px">'+esc(d)+'</td><td style="width:150px"><span class="pill '+statusCls(e.status)+'" style="font-size:11px">'+esc(e.status)+'</span></td><td style="width:70px;text-align:right"><span class="popen">open ↗</span></td></tr>';}).join("");
     var ebody=elist||'<tr><td colspan="4" class="novids">No linked events yet — add one below.</td></tr>';
     var epanel='<div class="vidpanel"><table class="vids"><thead><tr><th>Event</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>'+ebody+'</tbody></table><button class="addeventinline" data-pid="'+esc(x.id)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add event</button></div>';
@@ -1063,7 +1063,7 @@
     return main+sub;
   }
   function newPartner(){var p={id:uid("pt"),partner:"",owner:"",priority:"Medium",status:"Not started",country:"",notes:"",info:"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};partners.unshift(p);expanded[p.id]=true;saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="partner"][data-id="'+p.id+'"]');if(ta)ta.focus();},50);}
-  function delPartner(id){var x=partners.filter(function(p){return p.id===id;})[0];if(!x)return;var lc=events.filter(function(e){return e.partnerId===id;}).length;askConfirm("Delete this partnership?",'"'+(x.partner||"Untitled")+'"'+(lc?" — "+lc+" linked event"+(lc>1?"s":"")+" will be unlinked (not deleted)":""),function(){events.forEach(function(e){if(e.partnerId===id)e.partnerId="";});partners=partners.filter(function(p){return p.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Partnership deleted");},{danger:true,okLabel:"Delete"});}
+  function delPartner(id){var x=partners.filter(function(p){return p.id===id;})[0];if(!x)return;var lc=events.filter(function(e){return e.partnerId===id;}).length;askConfirm("Delete this project?",'"'+(x.partner||"Untitled")+'"'+(lc?" — "+lc+" linked event"+(lc>1?"s":"")+" will be unlinked (not deleted)":""),function(){events.forEach(function(e){if(e.partnerId===id)e.partnerId="";});partners=partners.filter(function(p){return p.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Project deleted");},{danger:true,okLabel:"Delete"});}
 
   function syncStatusFilter(){
     var fs=document.getElementById("fStatus");
@@ -1088,8 +1088,8 @@
     document.getElementById("fCountry").style.display=(view==="merch"||isContent||isVids||isEvents||isPartners)?"":"none";
     document.getElementById("fChannel").style.display=(view==="merch"||isContent||isVids)?"":"none";
     document.getElementById("tableCard").className="card "+(view==="items"?"view-items":isVids?"view-vids":isEvents?"view-events":isPartners?"view-partners":isContent?"view-content":"view-merch");
-    document.getElementById("newLabel").textContent = view==="items"?"New item":isEvents?"New event":isPartners?"New partnership":isContent?"New content":"New merchant";
-    document.getElementById("search").placeholder = view==="items"?"Search items, owners, notes…":isVids?"Search videos, merchants, channels…":isEvents?"Search events, owners, tasks…":isPartners?"Search partnerships, owners, notes…":isContent?"Search content, owners, channels…":"Search merchants, owners, videos…";
+    document.getElementById("newLabel").textContent = view==="items"?"New item":isEvents?"New event":isPartners?"New project":isContent?"New content":"New merchant";
+    document.getElementById("search").placeholder = view==="items"?"Search items, owners, notes…":isVids?"Search videos, merchants, channels…":isEvents?"Search events, owners, tasks…":isPartners?"Search projects, owners, notes…":isContent?"Search content, owners, channels…":"Search merchants, owners, videos…";
     syncStatusFilter();
     document.getElementById("fChannel").value=filters.channel;
     var thead=document.getElementById("thead"), tb=document.getElementById("rows");
@@ -1101,7 +1101,7 @@
     // Default view: finished items (Done / Posted) sink to the bottom, order otherwise preserved.
     if(!sort[view]){ var act=[],fin=[]; list.forEach(function(x){ var done=(view==="vids")?(x.v&&x.v.status==="Posted"):(x.status==="Done"); (done?fin:act).push(x); }); list=act.concat(fin); }
     document.getElementById("empty").style.display=list.length?"none":"block";
-    document.getElementById("emptySub").textContent = hasActiveFilters()?"Try clearing filters.":(isVids?"No final videos yet — add them under a merchant in Merchant content.":isEvents?"Add an event to get started.":isPartners?"Add a partnership to get started.":"Create a new entry to get started.");
+    document.getElementById("emptySub").textContent = hasActiveFilters()?"Try clearing filters.":(isVids?"No final videos yet — add them under a merchant in Merchant content.":isEvents?"Add an event to get started.":isPartners?"Add a project to get started.":"Create a new entry to get started.");
     tb.innerHTML = list.map(rowFn).join("");
     sizeTitles();
     document.getElementById("clearBtn").style.display=hasActiveFilters()?"inline-flex":"none";
