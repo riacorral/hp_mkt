@@ -146,6 +146,10 @@
   .tabmore-item{display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:transparent; border:0; padding:9px 11px; border-radius:7px; font:inherit; font-size:14px; color:var(--ink); cursor:pointer; white-space:nowrap}
   .tabmore-item:hover{background:var(--surface-2)}
   .tabmore-item.active{color:var(--accent); font-weight:600}
+  .card.view-prospects{border-top-color:var(--s-amber-fg)}
+  .card.view-prospects thead th{background:var(--s-amber-bg)}
+  .tabs-prospects .tab.active{color:var(--s-amber-fg); border-bottom-color:var(--s-amber-fg)}
+  .tabs-prospects .tab.active .cnt{background:var(--s-amber-bg); color:var(--s-amber-fg)}
   .card.view-content{border-top-color:var(--s-amber-fg)}
   .card.view-content thead th{background:var(--s-amber-bg)}
   .tabs-content .tab.active{color:var(--s-amber-fg); border-bottom-color:var(--s-amber-fg)}
@@ -227,6 +231,8 @@
   .calev .cch{font-size:9.5px; font-weight:700; padding:1px 5px; border-radius:4px}
   .calev-ev{background:var(--cal-ev-bg)}
   .calev-task{background:var(--cal-task-bg)}
+  .calev-maybe{background:var(--s-amber-bg)}
+  .maybetag{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
   .tsktag{color:var(--cal-task-fg); border-color:var(--cal-task-fg)}
   .vidtag{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
   .evtag{font-size:8.5px; font-weight:800; letter-spacing:.04em; color:var(--cal-ev-fg); background:var(--surface); border:1px solid var(--cal-ev-fg); border-radius:3px; padding:0 3px; vertical-align:1px}
@@ -495,7 +501,7 @@
       <div class="calmonth" id="calMonthLabel"></div>
       <button class="icon-btn" id="calNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       <button class="ghost" id="calToday">Today</button>
-      <select class="filter" id="calType"><option value="">All types</option><option value="events">Events</option><option value="tasks">Tasks</option><option value="videos">Videos</option></select>
+      <select class="filter" id="calType"><option value="">All types</option><option value="events">Events</option><option value="tasks">Tasks</option><option value="videos">Videos</option><option value="potential">Potential</option></select>
       <select class="filter" id="calChannel"><option value="">All channels</option></select>
       <div class="calnote" id="calNote"></div>
     </div>
@@ -600,6 +606,10 @@
   var PRIOS=["High","Medium","Low"];
   var CTYPES=["Merchant","Brand","Partnership"];
   var EVENT_TYPES=["Demo Night","Workshop","Task","Shoot","Expo","Partnership","Other"];
+  var PROSPECT_TYPES=["Pop-up","Bazaar","Market","Expo","Convention","Talk","Other"];
+  var PROSPECT_STATUSES=["Considering","Going","Maybe","Declined"];
+  var TIERS=["T1","T2","T3"];
+  var SEED_PROSPECTS=[{"name":"Common Rare Singapore 2026","ptype":"Bazaar","tier":"T1","date":"2026-09-18","endDate":"2026-09-20","country":"SG","venue":"Suntec Convention Hall 401-402","url":"","status":"Considering","notes":"High-fit: indie pop-up / bazaar density · ~200+ · Prior HitPay capture: 116 contactable leads"},{"name":"HomeFest 2026 (Round 2)","ptype":"Market","tier":"T1","date":"2026-09-18","endDate":"2026-09-20","country":"SG","venue":"Suntec Hall 405","url":"https://homefest.com.sg/","status":"Considering","notes":"High-fit: indie F&B / retail density · ~300+ ID firms · Home reno / lifestyle brands"},{"name":"Hitcheed Wedding Wonderland x Bridal Market","ptype":"Bazaar","tier":"T1","date":"2026-09-19","endDate":"2026-09-20","country":"SG","venue":"Suntec Hall 403","url":"https://hitcheed.com","status":"Considering","notes":"High-fit: indie pop-up / bazaar density · ~70+"},{"name":"Not Another Pet Fair","ptype":"Market","tier":"T1","date":"2026-09-19","endDate":"2026-09-20","country":"SG","venue":"Suntec Hall 404","url":"https://www.eventbrite.sg/e/not-another-pet-fair-sep26-rsvp-registration-tickets-1991676923292","status":"Considering","notes":"High-fit: pet retail pop-ups"},{"name":"Makers' Market @ PLQ Plaza - September","ptype":"Bazaar","tier":"T1","date":"2026-09-25","endDate":"2026-09-27","country":"SG","venue":"PLQ Plaza","url":"https://makersmarket.sg/","status":"Considering","notes":"High-fit: indie pop-up / bazaar density · Vendor list not public yet"},{"name":"Fiesta Botanica","ptype":"Market","tier":"T1","date":"2026-09-25","endDate":"2026-09-27","country":"SG","venue":"Suntec Level 3 Concourse","url":"https://www.suntecsingapore.com/visit-events","status":"Considering","notes":"High-fit: plant/lifestyle vendors"},{"name":"Artcade Singapore 2026","ptype":"Market","tier":"T1","date":"2026-09-26","endDate":"2026-09-27","country":"SG","venue":"Suntec Hall 404","url":"https://www.suntecsingapore.com/visit-events","status":"Considering","notes":"High-fit: indie art/makers market · ~100+"},{"name":"The Smart Home Tech Show 2026","ptype":"Expo","tier":"T1","date":"2026-10-01","endDate":"2026-10-04","country":"SG","venue":"Suntec Halls 401-404","url":"https://smarthometechshow.com.sg","status":"Considering","notes":"High-fit: consumer tech/lifestyle retail · Consumer retail booths"},{"name":"63rd TCE Baby Expo x 1st TCE Kidz World","ptype":"Expo","tier":"T1","date":"2026-10-02","endDate":"2026-10-04","country":"MY","venue":"MITEC, Kuala Lumpur","url":"https://mitec.com.my/visit/event-calendar","status":"Considering","notes":"High-fit: baby/kids consumer retail · Consumer baby/kids vendors"},{"name":"Eldex Asia 2026","ptype":"Expo","tier":"T2","date":"2026-10-02","endDate":"2026-10-04","country":"SG","venue":"Suntec Singapore","url":"https://www.suntecsingapore.com/visit-events","status":"Considering","notes":"Worth a look — confirm vendor profile"},{"name":"CyberDSA 2026","ptype":"Expo","tier":"T3","date":"2026-10-05","endDate":"2026-10-07","country":"MY","venue":"MITEC, Kuala Lumpur","url":"https://mitec.com.my/visit/event-calendar","status":"Declined","notes":"Cybersecurity B2B — off ICP · B2B cyber — low ICP"},{"name":"Philippine Lifestyle Sourcing Expo 2026","ptype":"Expo","tier":"T1","date":"2026-10-08","endDate":"2026-10-10","country":"PH","venue":"SMX Convention Center Manila","url":"https://expophlse.com/","status":"Considering","notes":"High-fit: fashion/sports/lifestyle trade"},{"name":"Ekspo Kucing 2026 (Asia Cat Expo)","ptype":"Expo","tier":"T1","date":"2026-10-09","endDate":"2026-10-11","country":"MY","venue":"MITEC, Kuala Lumpur","url":"https://mitec.com.my/visit/event-calendar","status":"Considering","notes":"High-fit: pet retail pop-ups · Pet retail / consumer"},{"name":"Manila FAME 2026","ptype":"Expo","tier":"T1","date":"2026-10-15","endDate":"2026-10-17","country":"PH","venue":"World Trade Center Metro Manila","url":"https://fameplus.com/manila_fame","status":"Considering","notes":"High-fit: home/fashion/lifestyle crafts · Prior HitPay capture: 118 contactable leads"},{"name":"ART KL 2026","ptype":"Market","tier":"T2","date":"2026-10-15","endDate":"2026-10-18","country":"MY","venue":"Kuala Lumpur","url":"https://www.artkl.my/","status":"Considering","notes":"Arts fair — secondary ICP · Confirm venue/dates"},{"name":"Urbanscapes 2026","ptype":"Market","tier":"T2","date":"2026-10-15","endDate":"2026-11-01","country":"MY","venue":"Kuala Lumpur (multi-venue)","url":"","status":"Considering","notes":"Worth a look — confirm vendor profile · Festival with market elements"},{"name":"Diwali Bazaar October 2026","ptype":"Bazaar","tier":"T1","date":"2026-10-16","endDate":"2026-10-16","country":"SG","venue":"Suntec Singapore","url":"https://www.suntecsingapore.com/visit-events","status":"Considering","notes":"High-fit: festive bazaar density · Confirm full dates closer to event"},{"name":"ITB Asia 2026","ptype":"Expo","tier":"T2","date":"2026-10-21","endDate":"2026-10-23","country":"SG","venue":"Marina Bay Sands","url":"https://www.eventseye.com/fairs/f-itb-asia-21457-1.html","status":"Considering","notes":"Travel operators — secondary ICP"},{"name":"Philippine International Truck Show (PITS) 2026","ptype":"Expo","tier":"T3","date":"2026-10-22","endDate":"2026-10-24","country":"PH","venue":"SMX Manila","url":"http://www.tma.com.ph/phil-international-truck-show-pits","status":"Declined","notes":"Trucks B2B — off ICP"},{"name":"Singapore International Agri-Food Week 2026","ptype":"Expo","tier":"T2","date":"2026-10-26","endDate":"2026-10-29","country":"SG","venue":"Suntec Singapore","url":"https://sginternationalagrifoodweek.com.sg","status":"Considering","notes":"Agri-food — mixed ICP"},{"name":"PSECE 2026","ptype":"Expo","tier":"T3","date":"2026-10-26","endDate":"2026-10-28","country":"PH","venue":"SMX Manila","url":"https://www.seipi.org.ph/event/21st-psece-2026/","status":"Declined","notes":"Semiconductor B2B — off ICP"},{"name":"MITEC event (unnamed on calendar scrape)","ptype":"Expo","tier":"T2","date":"2026-10-27","endDate":"2026-10-30","country":"MY","venue":"MITEC, Kuala Lumpur","url":"https://mitec.com.my/visit/event-calendar","status":"Maybe","notes":"MITEC Oct 27-30 slot — name TBD on calendar · Calendar row blank title — recheck"},{"name":"E3 Event Experience Expo 2026","ptype":"Expo","tier":"T2","date":"2026-10-28","endDate":"2026-10-29","country":"PH","venue":"World Trade Center Metro Manila","url":"https://www.wtcmanila.com.ph/","status":"Considering","notes":"Event suppliers — secondary ICP · Event suppliers / caterers"},{"name":"Homedec Kuala Lumpur 2026","ptype":"Expo","tier":"T2","date":"2026-10-29","endDate":"2026-11-01","country":"MY","venue":"KLCC","url":"https://10times.com/homedec","status":"Considering","notes":"Home/furniture — secondary ICP"},{"name":"Noel Bazaar 2026 (Nov/Dec runs)","ptype":"Bazaar","tier":"T1","date":"2026-11-01","endDate":"2026-11-30","country":"PH","venue":"Various / TBA","url":"https://iconicmnl.com/noel-bazaar-2026-rediscovering-the-magic-of-paskong-pinoy/","status":"Considering","notes":"High-fit: Christmas charity bazaar · Confirm exact Nov/Dec dates & venues"},{"name":"Taste & Trade 360 2026","ptype":"Expo","tier":"T2","date":"2026-11-05","endDate":"2026-11-07","country":"MY","venue":"KLCC Halls 1-4","url":"https://www.tt360.com.my/","status":"Considering","notes":"Worth a look — F&B trade"},{"name":"Asia Pacific Food Expo (APFE) 2026","ptype":"Expo","tier":"T1","date":"2026-11-06","endDate":"2026-11-09","country":"SG","venue":"Singapore EXPO Hall 4","url":"https://asiapacificfoodexpo.org.sg/","status":"Considering","notes":"High-fit: consumer food expo · ~100+ · Consumer food sampling / retail"},{"name":"Christmas Galore 2026","ptype":"Market","tier":"T2","date":"2026-11-07","endDate":"2026-11-08","country":"SG","venue":"Ubi Road 1","url":"https://www.eventbrite.sg/d/singapore--singapore/christmas-party/","status":"Considering","notes":"Worth a look — Christmas market · Confirm dates/venue"},{"name":"ICW & BuildXpo Malaysia 2026","ptype":"Expo","tier":"T3","date":"2026-11-10","endDate":"2026-11-12","country":"MY","venue":"MITEC","url":"https://expolah.com/event/4th-buildxpo-2026-mitec/","status":"Declined","notes":"Construction B2B — off ICP · B2B construction"},{"name":"World Travel Expo (WTE) 2026","ptype":"Expo","tier":"T2","date":"2026-11-13","endDate":"2026-11-15","country":"PH","venue":"Ayala Malls Manila Bay","url":"https://10times.com/e1gd-1s3g-sz2h-7-world-travel-expo","status":"Considering","notes":"Travel/tour — secondary ICP"},{"name":"Philippine Diecast Expo 2026","ptype":"Expo","tier":"T2","date":"2026-11-14","endDate":"2026-11-15","country":"PH","venue":"SMX Manila","url":"","status":"Considering","notes":"Worth a look — confirm vendor profile · Confirm listing"},{"name":"Smart Nation Expo 2026","ptype":"Expo","tier":"T2","date":"2026-11-17","endDate":"2026-11-19","country":"MY","venue":"MITEC","url":"https://smartnationexpo.org/visit-us/","status":"Considering","notes":"Smart city B2B — mixed · ~200+ · Mostly B2B tech"},{"name":"MIMEX 2026","ptype":"Expo","tier":"T3","date":"2026-11-17","endDate":"2026-11-18","country":"MY","venue":"KLCC","url":"https://happeningnext.com/event/malaysia-international-marine-expo-mimex-2026-eid3a0e0w8g1d","status":"Declined","notes":"Marine B2B — off ICP"},{"name":"Singapore Fintech Festival 2026","ptype":"Convention","tier":"T2","date":"2026-11-18","endDate":"2026-11-20","country":"SG","venue":"Singapore EXPO","url":"https://www.fintechfestival.sg/","status":"Considering","notes":"Fintech B2B — low booth retail · ~600+ · Mostly B2B; low in-person retail ICP"},{"name":"Boutiques Singapore — The Gifting Edition 2026","ptype":"Bazaar","tier":"T1","date":"2026-11-20","endDate":"2026-11-22","country":"SG","venue":"F1 Pit Building","url":"https://www.boutiquefairs.com.sg/pages/about","status":"Considering","notes":"High-fit: 300+ indie design brands · ~300+ · Top priority for Q4 SG"},{"name":"MITTE 2026 (Textile & Tourism Expo)","ptype":"Expo","tier":"T1","date":"2026-11-20","endDate":"2026-11-22","country":"MY","venue":"KLCC Hall 5","url":"https://www.bigorangemedia.com/36223","status":"Considering","notes":"High-fit: fashion / textile / crafts retail · Fashion + cultural crafts"},{"name":"Ecommerce Expo 2026","ptype":"Expo","tier":"T2","date":"2026-11-20","endDate":"2026-11-21","country":"PH","venue":"SMX Aura","url":"","status":"Considering","notes":"Worth a look — ecom vendors · Confirm listing"},{"name":"Christmas Together @ Marina Bay Sands","ptype":"Market","tier":"T2","date":"2026-11-26","endDate":"2026-11-29","country":"SG","venue":"Marina Bay Sands","url":"https://www.marinabaysands.com/","status":"Considering","notes":"Worth a look — confirm vendor profile · Confirm 2026 listing"},{"name":"World Bazaar Festival 2026","ptype":"Bazaar","tier":"T1","date":"2026-12-11","endDate":"2026-12-20","country":"PH","venue":"World Trade Center Metro Manila","url":"https://worldbazaarfestival.com/","status":"Considering","notes":"High-fit: longest-running Christmas charity bazaar · Top PH Christmas lead source"},{"name":"19th Christmas Toys and Collectibles Fair 2026","ptype":"Market","tier":"T1","date":"2026-12-11","endDate":"2026-12-13","country":"PH","venue":"Megatrade Hall, SM Megamall","url":"https://happeningnext.com/event/19th-christmas-toys-and-collectibles-fair-2026-eid3a0e2j44nq","status":"Considering","notes":"High-fit: toys/collectibles retail"},{"name":"Comic Fiesta 2026","ptype":"Convention","tier":"T1","date":"2026-12-19","endDate":"2026-12-20","country":"MY","venue":"KLCC","url":"https://www.comicfiesta.org","status":"Considering","notes":"High-fit: creative art market / indie booths · ~100+ art market · Creative Art Market + commercial exhibitors"},{"name":"EOY Music, Comics & Arts Festival 2026","ptype":"Convention","tier":"T1","date":"2026-12-25","endDate":"2026-12-26","country":"SG","venue":"Suntec Hall 405","url":"https://suntecloop.com/news/eoy-music-comics-arts-festival-2026-suntec","status":"Considering","notes":"High-fit: creator/exhibitor booths · Creators' Alley / exhibitor booths"},{"name":"Team Payaman Fair 2026","ptype":"Convention","tier":"T1","date":"2026-12-27","endDate":"2026-12-30","country":"PH","venue":"SMX Convention Center Manila","url":"https://mediagroup.viyline.net/2026/08/03/team-payaman-fair-2026-opens-remaining-partnership-opportunities/","status":"Considering","notes":"High-fit: consumer fan fair / booth retail · Brand booth partners"}];
   var CHANNELS=[{code:"IG",name:"Instagram"},{code:"TK",name:"TikTok"},{code:"FB",name:"Facebook"},{code:"LI",name:"LinkedIn"},{code:"YT",name:"YouTube"},{code:"YTS",name:"YouTube Shorts"},{code:"WA",name:"WhatsApp"},{code:"EDM",name:"Email (EDM)"}];
   var FLAG={"Philippines":"🇵🇭","Singapore":"🇸🇬","Malaysia":"🇲🇾"};
 
@@ -669,7 +679,7 @@
     }
   }
 
-  var items=[], merch=[], events=[], partners=[], content=[];
+  var items=[], merch=[], events=[], partners=[], content=[], prospects=[];
   var API="/api/data";
   var serverRev=-1, saveTimer=null, lastMutation=0, lastSync=0, syncTimer=null;
   function updateSyncLabel(){var el=document.getElementById("syncLabel");if(!el)return;if(!lastSync){el.textContent="connecting…";return;}var s=Math.round((Date.now()-lastSync)/1000);el.textContent=s<3?"synced just now":s<60?("synced "+s+"s ago"):("synced "+Math.round(s/60)+"m ago");}
@@ -677,7 +687,7 @@
     var it=seedItems(), mr=seedMerch();
     ADD_MERCH_A11.slice().reverse().forEach(function(m){mr.unshift(JSON.parse(JSON.stringify(m)));});
     ADD_ITEMS_A11.slice().reverse().forEach(function(i){it.unshift(JSON.parse(JSON.stringify(i)));});
-    return {items:it, merch:mr, bugs:[], events:[], partners:[], content:[]};
+    return {items:it, merch:mr, bugs:[], events:[], partners:[], content:[], prospects:[]};
   }
   function normalizeState(){
     // Merged Merchant into Content: migrate any legacy merch records over (tagged Merchant).
@@ -706,8 +716,23 @@
     // Drop dangling event→partner links.
     var pids={}; partners.forEach(function(p){pids[p.id]=1;});
     events.forEach(function(e){ if(e.partnerId && !pids[e.partnerId]) e.partnerId=""; });
+    prospects.forEach(function(p){
+      if(!p.id)p.id=uid("pr");
+      if(p.name===undefined)p.name=String(p.event||"");
+      if(p.ptype===undefined)p.ptype=""; if(p.tier===undefined)p.tier=""; if(p.date===undefined)p.date=""; if(p.endDate===undefined)p.endDate="";
+      if(p.country===undefined)p.country=""; if(p.venue===undefined)p.venue=""; if(p.url===undefined)p.url=""; if(p.status===undefined)p.status="Considering"; if(p.owner===undefined)p.owner=""; if(p.notes===undefined)p.notes="";
+      if(!p.added)p.added=p.updated||"—"; if(p.addedBy===undefined)p.addedBy=""; if(p.updatedBy===undefined)p.updatedBy="";
+      if(p.country){var qc=CNORM[String(p.country).trim().toLowerCase()]; if(qc)p.country=qc;}
+    });
   }
-  function applyServer(st){ items=Array.isArray(st.items)?st.items:[]; merch=Array.isArray(st.merch)?st.merch:[]; bugs=Array.isArray(st.bugs)?st.bugs:[]; events=Array.isArray(st.events)?st.events:[]; partners=Array.isArray(st.partners)?st.partners:[]; content=Array.isArray(st.content)?st.content:[]; if(typeof st.rev==="number")serverRev=st.rev; normalizeState(); }
+  function importProspects(){
+    try{ if(localStorage.getItem("prospects_seeded_v1")) return false; }catch(e){}
+    if(prospects.length) { try{localStorage.setItem("prospects_seeded_v1","1");}catch(e){} return false; }
+    SEED_PROSPECTS.forEach(function(r){ var o=JSON.parse(JSON.stringify(r)); o.id=uid("pr"); o.added=today(); o.updated=today(); o.addedBy="Events Hunter"; o.updatedBy="Events Hunter"; prospects.push(o); });
+    try{localStorage.setItem("prospects_seeded_v1","1");}catch(e){}
+    normalizeState(); saveNow(); return true;
+  }
+  function applyServer(st){ items=Array.isArray(st.items)?st.items:[]; merch=Array.isArray(st.merch)?st.merch:[]; bugs=Array.isArray(st.bugs)?st.bugs:[]; events=Array.isArray(st.events)?st.events:[]; partners=Array.isArray(st.partners)?st.partners:[]; content=Array.isArray(st.content)?st.content:[]; prospects=Array.isArray(st.prospects)?st.prospects:[]; if(typeof st.rev==="number")serverRev=st.rev; normalizeState(); }
   function loadAll(done){
     fetch(API,{cache:"no-store"}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(st){
       if(st===null) return;
@@ -719,7 +744,7 @@
   }
   function saveNow(){
     lastMutation=Date.now();
-    return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items,merch:merch,bugs:bugs,events:events,partners:partners,content:content})}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(res){ if(res){ lastSync=Date.now(); if(typeof res.rev==="number")serverRev=res.rev; } }).catch(function(){ toast("Save failed — check your connection.",true); });
+    return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items,merch:merch,bugs:bugs,events:events,partners:partners,content:content,prospects:prospects})}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(res){ if(res){ lastSync=Date.now(); if(typeof res.rev==="number")serverRev=res.rev; } }).catch(function(){ toast("Save failed — check your connection.",true); });
   }
   function saveAll(){ lastMutation=Date.now(); if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(function(){saveTimer=null;saveNow();},350); }
   function isBusyUI(){ if(document.querySelector(".overlay.open"))return true; if(document.querySelector(".chanpop.open"))return true; var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return true; return saveTimer!==null; }
@@ -770,7 +795,7 @@
   var filters={q:"",status:"__open__",prio:"",country:"",owner:"",channel:"",xtype:""};
   var expanded={};
 
-  function currentList(){return view==="items"?items:view==="events"?events:view==="partners"?partners:view==="content"?content:merch;}
+  function currentList(){return view==="items"?items:view==="events"?events:view==="partners"?partners:view==="content"?content:view==="prospects"?prospects:merch;}
   function mcAll(){return merch.concat(content);}
   function mcById(id){return mcAll().filter(function(z){return z.id===id;})[0];}
   function isOpen(x){return x.status!=="Done"&&x.status!=="On hold";}
@@ -778,13 +803,13 @@
   function hasActiveFilters(){return !!(filters.q||filters.prio||filters.owner||filters.channel||filters.xtype||((view==="merch"||view==="content"||view==="vids"||view==="events")&&filters.country)||(filters.status&&filters.status!==defaultStatus(view)));}
   function ownersOf(x){return String(x.owner||"").split(",").map(function(s){return s.trim();}).filter(Boolean);}
 
-  function scheduledCount(all){var n=0;mcAll().forEach(function(m){(m.videos||[]).forEach(function(v){if(all||v.date)n++;});});if(!all){events.forEach(function(e){if(isValidDate(e.date))n++;});partners.forEach(function(p){(p.tasks||[]).forEach(function(t){if(isValidDate(t.due))n++;});});events.forEach(function(e){(e.tasks||[]).forEach(function(t){if(isValidDate(t.due))n++;});});}return n;}
+  function scheduledCount(all){var n=0;mcAll().forEach(function(m){(m.videos||[]).forEach(function(v){if(all||v.date)n++;});});if(!all){events.forEach(function(e){if(isValidDate(e.date))n++;});partners.forEach(function(p){(p.tasks||[]).forEach(function(t){if(isValidDate(t.due))n++;});});events.forEach(function(e){(e.tasks||[]).forEach(function(t){if(isValidDate(t.due))n++;});});prospects.forEach(function(p){if(isValidDate(p.date)&&p.status!=="Declined")n++;});}return n;}
   function switchView(k){ if(view!==k){ view=k; filters={q:"",status:defaultStatus(k),prio:"",country:"",owner:"",channel:"",xtype:""}; ["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var e=document.getElementById(idv);if(e)e.value="";}); render(); } }
   function renderTabs(){
     var el=document.getElementById("tabs"); el.innerHTML="";
-    var clsMap={items:"tabs-items",content:"tabs-content",events:"tabs-events",partners:"tabs-partners",report:"tabs-report",cal:"tabs-cal",vids:"tabs-vids"};
+    var clsMap={items:"tabs-items",content:"tabs-content",events:"tabs-events",partners:"tabs-partners",prospects:"tabs-prospects",report:"tabs-report",cal:"tabs-cal",vids:"tabs-vids"};
     el.className="tabs "+(clsMap[view]||"tabs-cal");
-    var primary=[{k:"partners",l:"Projects",n:partners.length},{k:"content",l:"Content",n:content.length},{k:"events",l:"Events",n:events.length},{k:"cal",l:"Calendar",n:scheduledCount()},{k:"items",l:"Action items",n:items.length}];
+    var primary=[{k:"partners",l:"Projects",n:partners.length},{k:"content",l:"Content",n:content.length},{k:"events",l:"Events",n:events.length},{k:"prospects",l:"Prospects",n:prospects.length},{k:"cal",l:"Calendar",n:scheduledCount()},{k:"items",l:"Action items",n:items.length}];
     var more=[{k:"vids",l:"All videos",n:scheduledCount(true)},{k:"report",l:"Analytics",n:null}];
     function tabBtn(t){var b=document.createElement("button");b.className="tab"+(view===t.k?" active":"");b.setAttribute("role","tab");b.setAttribute("aria-selected",view===t.k?"true":"false");b.innerHTML=esc(t.l)+(t.n===null?'':' <span class="cnt">'+t.n+'</span>');b.addEventListener("click",function(){switchView(t.k);});return b;}
     primary.forEach(function(t){el.appendChild(tabBtn(t));});
@@ -820,15 +845,17 @@
     else if(filters.status && x.status!==filters.status) return false;
     if(filters.prio && x.priority!==filters.prio) return false;
     if(filters.owner && ownersOf(x).indexOf(filters.owner)<0) return false;
-    if((view==="merch"||view==="content"||view==="events"||view==="partners") && filters.country && x.country!==filters.country) return false;
+    if((view==="merch"||view==="content"||view==="events"||view==="partners"||view==="prospects") && filters.country && x.country!==filters.country) return false;
     if((view==="merch"||view==="content") && filters.channel && !(x.videos||[]).some(function(v){return (v.channels||[]).indexOf(filters.channel)>=0;})) return false;
     if(view==="content" && filters.xtype && (x.ctype||"")!==filters.xtype) return false;
     if(view==="events" && filters.xtype && (x.etype||"")!==filters.xtype) return false;
+    if(view==="prospects" && filters.xtype && (x.ptype||"")!==filters.xtype) return false;
     if(filters.q){
       var q=filters.q.toLowerCase(), hay;
       if(view==="items") hay=(x.item+" "+x.owner+" "+x.notes+" "+x.due+" "+x.status);
       else if(view==="events") hay=(x.event+" "+x.owner+" "+x.country+" "+x.notes+" "+x.date+" "+x.status+" "+(x.tasks||[]).map(function(t){return t.task+" "+t.owner+" "+t.notes;}).join(" "));
       else if(view==="partners") hay=(x.partner+" "+x.owner+" "+x.country+" "+x.notes+" "+x.info+" "+x.status);
+      else if(view==="prospects") hay=(x.name+" "+x.ptype+" "+x.tier+" "+x.country+" "+x.venue+" "+x.notes+" "+x.status+" "+x.date);
       else hay=(x.merchant+" "+x.owner+" "+x.country+" "+x.notes+" "+x.due+" "+x.status+" "+(x.videos||[]).map(function(v){return (v.channels||[]).join(" ")+" "+v.notes;}).join(" "));
       if(hay.toLowerCase().indexOf(q)<0) return false;
     }
@@ -857,7 +884,8 @@
       if(key==="item")return {t:"s",v:rec.item}; if(key==="merchant")return {t:"s",v:rec.merchant};
       if(key==="event")return {t:"s",v:rec.event}; if(key==="date")return {t:"d",v:rec.date}; if(key==="format")return {t:"s",v:rec.format}; if(key==="partner")return {t:"s",v:rec.partner}; if(key==="ctype")return {t:"s",v:rec.ctype}; if(key==="etype")return {t:"s",v:rec.etype};
       if(key==="owner")return {t:"s",v:rec.owner}; if(key==="country")return {t:"s",v:rec.country};
-      if(key==="priority")return {t:"n",v:PRIOS.indexOf(rec.priority)}; if(key==="status")return {t:"n",v:stRank(rec.status)};
+      if(key==="name")return {t:"s",v:rec.name}; if(key==="ptype")return {t:"s",v:rec.ptype}; if(key==="tier")return {t:"s",v:rec.tier}; if(key==="venue")return {t:"s",v:rec.venue};
+      if(key==="priority")return {t:"n",v:PRIOS.indexOf(rec.priority)}; if(key==="status")return (v==="prospects"?{t:"s",v:rec.status}:{t:"n",v:stRank(rec.status)});
       if(key==="due")return {t:"d",v:rec.due};
     }
     return {t:"s",v:""};
@@ -877,7 +905,7 @@
   // ---- item table ----
   function thItems(){return '<tr>'+sth("items","item","Action item",'width:28%')+sth("items","owner","Owner")+sth("items","status","Status")+sth("items","due","Due")+'<th style="width:26%">Notes &amp; reference link</th><th style="text-align:right">Actions</th></tr>';}
   var LINKSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
-  function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:kind==="event"?events:kind==="partner"?partners:mcAll();return arr.filter(function(r){return r.id===id;})[0];}
+  function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:kind==="event"?events:kind==="partner"?partners:kind==="prospect"?prospects:mcAll();return arr.filter(function(r){return r.id===id;})[0];}
   function cellIn(kind,id,f,val,ph){return '<input class="cellin" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" value="'+esc(val==null?"":val)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(f==="country"?' list="countryList"':(f==="owner"?' list="ownerList"':''))+'>';}
   function prioSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="priority">'+PRIOS.map(function(p){return '<option'+(p===val?" selected":"")+'>'+esc(p)+'</option>';}).join("")+'</select>';}
   var FORMATS=["Physical","Online"];
@@ -1091,22 +1119,47 @@
   function newPartner(){var p={id:uid("pt"),partner:"",owner:"",priority:"Medium",status:"Not started",country:"",notes:"",info:"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};partners.unshift(p);expanded[p.id]=true;saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="partner"][data-id="'+p.id+'"]');if(ta)ta.focus();},50);}
   function delPartner(id){var x=partners.filter(function(p){return p.id===id;})[0];if(!x)return;var lc=events.filter(function(e){return e.partnerId===id;}).length;askConfirm("Delete this project?",'"'+(x.partner||"Untitled")+'"'+(lc?" — "+lc+" linked event"+(lc>1?"s":"")+" will be unlinked (not deleted)":""),function(){events.forEach(function(e){if(e.partnerId===id)e.partnerId="";});partners=partners.filter(function(p){return p.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Project deleted");},{danger:true,okLabel:"Delete"});}
 
+  // ---- prospects (potential events to attend) ----
+  function ptypeSel(id,val){return '<select class="cellsel" data-kind="prospect" data-id="'+esc(id)+'" data-f="ptype"><option value=""'+(val?"":" selected")+'>—</option>'+PROSPECT_TYPES.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
+  function tierSel(id,val){return '<select class="cellsel" data-kind="prospect" data-id="'+esc(id)+'" data-f="tier"><option value=""'+(val?"":" selected")+'>—</option>'+TIERS.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
+  function prStatusSel(id,val){return '<select class="cellsel pr-status pst-'+esc((val||"").toLowerCase())+'" data-kind="prospect" data-id="'+esc(id)+'" data-f="status">'+PROSPECT_STATUSES.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
+  function prLinkCell(x){var u=safeUrl(x.url);return '<div class="linkcell"><input class="pr-link" data-id="'+esc(x.id)+'" type="url" placeholder="https://…" value="'+esc(x.url||"")+'"><a class="pr-open" href="'+esc(u||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(u?"":"display:none")+'">open</a></div>';}
+  function prDateCell(x){var d=isValidDate(x.date)?x.date:"";return '<div class="datewrap"><input class="cellin cell-date" type="date" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'"></div>';}
+  function gcalProspectUrl(x){var p=["action=TEMPLATE","text="+encodeURIComponent(x.name||"Event")];if(isValidDate(x.date))p.push("dates="+ymd(x.date)+"/"+nextYmd(isValidDate(x.endDate)?x.endDate:x.date));var det=[];if(x.notes)det.push(x.notes);if(x.url)det.push(x.url);if(det.length)p.push("details="+encodeURIComponent(det.join("\n\n")));var loc=[x.venue,x.country].filter(Boolean).join(", ");if(loc)p.push("location="+encodeURIComponent(loc));GCAL_GUESTS.forEach(function(g){p.push("add="+encodeURIComponent(g));});return "https://calendar.google.com/calendar/render?"+p.join("&");}
+  function thProspects(){return '<tr>'+sth("prospects","name","Event",'width:24%')+sth("prospects","ptype","Type")+sth("prospects","tier","Tier")+sth("prospects","date","Date")+sth("prospects","country","Country")+sth("prospects","status","Status")+'<th>Link</th><th style="width:22%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function rowProspect(x){
+    var range=shortDate(x.date)+((x.endDate&&x.endDate!==x.date)?" – "+shortDate(x.endDate):"");
+    return '<tr class="main" data-kind="prospect" data-id="'+esc(x.id)+'">'+
+      '<td class="c-item"><textarea class="cellin cell-title" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="name" rows="1" placeholder="Event name">'+esc(x.name||"")+'</textarea><div class="meta" title="'+esc(range)+'">'+esc(x.venue||"")+(x.endDate&&x.endDate!==x.date?' · '+esc(range):'')+'</div></td>'+
+      '<td>'+ptypeSel(x.id,x.ptype)+'</td>'+
+      '<td>'+tierSel(x.id,x.tier)+'</td>'+
+      '<td>'+prDateCell(x)+'</td>'+
+      '<td>'+cellIn("prospect",x.id,"country",x.country,"Country")+'</td>'+
+      '<td>'+prStatusSel(x.id,x.status)+'</td>'+
+      '<td style="min-width:150px">'+prLinkCell(x)+'</td>'+
+      '<td class="c-notes"><textarea class="cellin celltxt" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
+      '<td class="c-actions"><button class="icon-btn gcalbtn" data-prgcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-prdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
+    '</tr>';
+  }
+  function newProspect(){var p={id:uid("pr"),name:"",ptype:"",tier:"",date:"",endDate:"",country:"",venue:"",url:"",status:"Considering",owner:"",notes:"",added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};prospects.unshift(p);saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="prospect"][data-id="'+p.id+'"]');if(ta)ta.focus();},50);}
+  function delProspect(id){var x=prospects.filter(function(p){return p.id===id;})[0];if(!x)return;askConfirm("Delete this prospect?",'"'+(x.name||"Untitled")+'"',function(){prospects=prospects.filter(function(p){return p.id!==id;});saveAll();refreshOptions();render();toast("Prospect deleted");},{danger:true,okLabel:"Delete"});}
+
   function syncTypeFilter(){
     var f=document.getElementById("fType");
-    var opts=(view==="content")?CTYPES:(view==="events")?EVENT_TYPES:[];
+    var opts=(view==="content")?CTYPES:(view==="events")?EVENT_TYPES:(view==="prospects")?PROSPECT_TYPES:[];
     f.innerHTML='<option value="">All types</option>'+opts.map(function(t){return '<option>'+esc(t)+'</option>';}).join("");
     f.value=filters.xtype||"";
   }
   function syncStatusFilter(){
     var fs=document.getElementById("fStatus");
-    var opts=(view==="vids")?VIDEO_STATUSES:STATUSES;
+    var opts=(view==="vids")?VIDEO_STATUSES:(view==="prospects")?PROSPECT_STATUSES.map(function(s){return {label:s};}):STATUSES;
     fs.innerHTML='<option value="">All statuses</option>'+opts.map(function(s){return '<option>'+esc(s.label)+'</option>';}).join("");
     fs.value=(filters.status==="__open__"?"":filters.status);
   }
   function render(){
     closeChanPop(); closeOwnerPop();
     renderTabs();
-    var isCal=(view==="cal"), isVids=(view==="vids"), isReport=(view==="report"), isEvents=(view==="events"), isPartners=(view==="partners"), isContent=(view==="content");
+    var isCal=(view==="cal"), isVids=(view==="vids"), isReport=(view==="report"), isEvents=(view==="events"), isPartners=(view==="partners"), isContent=(view==="content"), isProspects=(view==="prospects");
     document.getElementById("stats").style.display="none";
     document.querySelector(".toolbar").style.display=(isCal||isReport)?"none":"flex";
     document.getElementById("tableCard").style.display=(isCal||isReport)?"none":"";
@@ -1116,20 +1169,20 @@
     if(isCal){ renderCalendar(); return; }
     if(isReport){ renderReport(); return; }
     document.getElementById("fPrio").style.display="none";
-    document.getElementById("fCountry").style.display=(view==="merch"||isContent||isVids||isEvents||isPartners)?"":"none";
+    document.getElementById("fCountry").style.display=(view==="merch"||isContent||isVids||isEvents||isPartners||isProspects)?"":"none";
     document.getElementById("fChannel").style.display=(view==="merch"||isContent||isVids)?"":"none";
-    document.getElementById("fType").style.display=(isContent||isEvents)?"":"none";
+    document.getElementById("fType").style.display=(isContent||isEvents||isProspects)?"":"none";
     syncTypeFilter();
-    document.getElementById("tableCard").className="card "+(view==="items"?"view-items":isVids?"view-vids":isEvents?"view-events":isPartners?"view-partners":isContent?"view-content":"view-merch");
-    document.getElementById("newLabel").textContent = view==="items"?"New item":isEvents?"New event":isPartners?"New project":isContent?"New content":"New merchant";
-    document.getElementById("search").placeholder = view==="items"?"Search items, owners, notes…":isVids?"Search videos, merchants, channels…":isEvents?"Search events, owners, tasks…":isPartners?"Search projects, owners, notes…":isContent?"Search content, owners, channels…":"Search merchants, owners, videos…";
+    document.getElementById("tableCard").className="card "+(view==="items"?"view-items":isVids?"view-vids":isEvents?"view-events":isPartners?"view-partners":isContent?"view-content":isProspects?"view-prospects":"view-merch");
+    document.getElementById("newLabel").textContent = view==="items"?"New item":isEvents?"New event":isPartners?"New project":isContent?"New content":isProspects?"New prospect":"New merchant";
+    document.getElementById("search").placeholder = view==="items"?"Search items, owners, notes…":isVids?"Search videos, merchants, channels…":isEvents?"Search events, owners, tasks…":isPartners?"Search projects, owners, notes…":isContent?"Search content, owners, channels…":isProspects?"Search prospects, venue, type…":"Search merchants, owners, videos…";
     syncStatusFilter();
     document.getElementById("fChannel").value=filters.channel;
     var thead=document.getElementById("thead"), tb=document.getElementById("rows");
-    thead.innerHTML = view==="items"?thItems():isVids?thVids():isEvents?thEvents():isPartners?thPartners():thMerch();
+    thead.innerHTML = view==="items"?thItems():isVids?thVids():isEvents?thEvents():isPartners?thPartners():isProspects?thProspects():thMerch();
     var list, rowFn;
     if(isVids){ list=allVideos().filter(videoMatches); rowFn=rowVideo; }
-    else { list=currentList().filter(matches); rowFn=(view==="items"?rowItem:isEvents?rowEvent:isPartners?rowPartner:rowMerch); }
+    else { list=currentList().filter(matches); rowFn=(view==="items"?rowItem:isEvents?rowEvent:isPartners?rowPartner:isProspects?rowProspect:rowMerch); }
     list=sortList(list);
     // Default view: finished items (Done / Posted) sink to the bottom, order otherwise preserved.
     if(!sort[view]){ var act=[],fin=[]; list.forEach(function(x){ var done=(view==="vids")?(x.v&&x.v.status==="Posted"):(x.status==="Done"); (done?fin:act).push(x); }); list=act.concat(fin); }
@@ -1147,7 +1200,7 @@
   var DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   function pad2(n){return String(n).length<2?"0"+n:String(n);}
   function fmtDate(y,m,d){return y+"-"+pad2(m+1)+"-"+pad2(d);}
-  function calTypeOk(kind){var t=calType;if(!t)return true;if(t==="events")return kind==="event";if(t==="tasks")return kind==="task"||kind==="ptask";if(t==="videos")return kind==="merch"||kind==="content";return true;}
+  function calTypeOk(kind){var t=calType;if(!t)return true;if(t==="events")return kind==="event";if(t==="tasks")return kind==="task"||kind==="ptask";if(t==="videos")return kind==="merch"||kind==="content";if(t==="potential")return kind==="prospect";return true;}
   function calEntries(){
     var map={};
     function pushVids(arr,kind){if(!calTypeOk(kind))return;arr.forEach(function(m){(m.videos||[]).forEach(function(v){ if(!v.date)return; if(filters.channel && (v.channels||[]).indexOf(filters.channel)<0)return; (map[v.date]=map[v.date]||[]).push({kind:kind,id:m.id,title:m.merchant,channels:v.channels||[],status:v.status}); });});}
@@ -1157,6 +1210,7 @@
       if(calTypeOk("task")) (e.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"task",id:e.id,title:t.task||"Untitled task",channels:[],status:t.status}); });
     });
       if(calTypeOk("ptask")) partners.forEach(function(p){ (p.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"ptask",id:p.id,title:t.task||"Untitled task",channels:[],status:t.status}); }); });
+      if(calTypeOk("prospect")) prospects.forEach(function(p){ if(!isValidDate(p.date))return; if(p.status==="Declined")return; (map[p.date]=map[p.date]||[]).push({kind:"prospect",id:p.id,title:p.name||"Untitled",channels:[],status:p.status}); });
     }
     return map;
   }
@@ -1180,9 +1234,9 @@
       cell.className="calcell"+(dt.getMonth()!==calM?" out":"")+(ds===todayStr?" today":"");
       var html='<div class="caldate">'+dt.getDate()+'</div>';
       evs.forEach(function(ev){
-        var isEv=ev.kind==="event", isTask=(ev.kind==="task"||ev.kind==="ptask");
-        var tag=isEv?'<span class="evtag">EVENT</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':'';
-        html+='<div class="calev'+(isEv?" calev-ev":isTask?" calev-task":"")+'" data-kind="'+esc(ev.kind)+'" data-id="'+esc(ev.id)+'"><div class="cm">'+tag+esc(ev.title)+'</div><div class="csub">'+
+        var isEv=ev.kind==="event", isTask=(ev.kind==="task"||ev.kind==="ptask"), isProsp=ev.kind==="prospect";
+        var tag=isEv?'<span class="evtag">EVENT</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':isProsp?'<span class="evtag maybetag">MAYBE</span> ':'';
+        html+='<div class="calev'+(isEv?" calev-ev":isTask?" calev-task":isProsp?" calev-maybe":"")+'" data-kind="'+esc(ev.kind)+'" data-id="'+esc(ev.id)+'"><div class="cm">'+tag+esc(ev.title)+'</div><div class="csub">'+
           (ev.channels||[]).map(function(ch){return '<span class="cch chan '+esc(ch)+'">'+esc(ch)+'</span>';}).join("")+
           '<span class="pill '+statusCls(ev.status)+'" style="font-size:9.5px;padding:1px 6px">'+esc(ev.status)+'</span></div></div>';
       });
@@ -1229,7 +1283,7 @@
     var pushName=function(n){n=(n||"").trim();if(n&&owners.indexOf(n)<0)owners.push(n);};
     items.concat(merch).concat(content).concat(events).concat(partners).forEach(function(x){String(x.owner||"").split(",").forEach(pushName);});
     events.forEach(function(e){(e.tasks||[]).forEach(function(t){String(t.owner||"").split(",").forEach(pushName);});});
-    merch.concat(content).concat(events).concat(partners).forEach(function(x){if(x.country&&countries.indexOf(x.country)<0)countries.push(x.country);});
+    merch.concat(content).concat(events).concat(partners).concat(prospects).forEach(function(x){if(x.country&&countries.indexOf(x.country)<0)countries.push(x.country);});
     owners.sort(); countries.sort();
     var fo=document.getElementById("fOwner"),co=fo.value; fo.innerHTML='<option value="">All owners</option>'+owners.map(function(o){return '<option>'+esc(o)+'</option>';}).join(""); fo.value=co;
     var fs=document.getElementById("fStatus"),cs=fs.value; fs.innerHTML='<option value="">All statuses</option>'+STATUSES.map(function(s){return '<option>'+esc(s.label)+'</option>';}).join(""); fs.value=cs;
@@ -1345,7 +1399,7 @@
   function toggleTheme(){var cur=document.documentElement.getAttribute("data-theme");var dark=cur?cur==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);var n=dark?"light":"dark";try{localStorage.setItem(THEME_KEY,n);}catch(e){}applyTheme(n);}
 
   // ---- events ----
-  document.getElementById("newBtn").addEventListener("click",function(){view==="items"?openItem(null):view==="events"?newEvent():view==="partners"?newPartner():openMerch(null);});
+  document.getElementById("newBtn").addEventListener("click",function(){view==="items"?openItem(null):view==="events"?newEvent():view==="partners"?newPartner():view==="prospects"?newProspect():openMerch(null);});
   document.getElementById("closeModal").addEventListener("click",closeItem);
   document.getElementById("cancelBtn").addEventListener("click",closeItem);
   document.getElementById("saveBtn").addEventListener("click",saveItem);
@@ -1401,6 +1455,8 @@
     var gc=e.target.closest("[data-gcal]");if(gc){var ge=events.filter(function(z){return z.id===gc.getAttribute("data-gcal");})[0];if(ge){if(!(ge.event||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalUrl(ge),"_blank","noopener");}return;}
     var ed=e.target.closest("[data-edel]");if(ed){delEvent(ed.getAttribute("data-edel"));return;}
     var pd=e.target.closest("[data-pdel]");if(pd){delPartner(pd.getAttribute("data-pdel"));return;}
+    var prd=e.target.closest("[data-prdel]");if(prd){delProspect(prd.getAttribute("data-prdel"));return;}
+    var prg=e.target.closest("[data-prgcal]");if(prg){var pe=prospects.filter(function(z){return z.id===prg.getAttribute("data-prgcal");})[0];if(pe){if(!(pe.name||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalProspectUrl(pe),"_blank","noopener");}return;}
     var aei=e.target.closest(".addeventinline");if(aei){newEvent(aei.getAttribute("data-pid"));return;}
     var eo=e.target.closest("[data-eopen]");if(eo){var eoid=eo.getAttribute("data-eopen");view="events";filters={q:"",status:"",prio:"",country:"",owner:"",channel:""};expanded[eoid]=true;["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});render();setTimeout(function(){var b=document.querySelector('[data-exp="'+eoid+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);return;}
     var at=e.target.closest(".addtaskinline");if(at){var aeid=at.getAttribute("data-eid");var ae=events.concat(partners).filter(function(z){return z.id===aeid;})[0];if(ae){ae.tasks=ae.tasks||[];ae.tasks.push({id:uid("t"),task:"",owner:"",status:"Not started",due:"",notes:""});stamp(ae);expanded[aeid]=true;saveAll();render();}return;}
@@ -1420,6 +1476,7 @@
   document.getElementById("rows").addEventListener("input",function(e){
     var ms=e.target.closest(".m-script");if(ms){var mmid=ms.getAttribute("data-mid");var mm=mcById(mmid);if(mm){mm.scriptLink=ms.value;stamp(mm);saveAll();var ma=ms.parentNode.querySelector(".m-open");var mu=safeUrl(ms.value);if(ma){if(mu){ma.href=mu;ma.style.display="";}else{ma.style.display="none";}}}return;}
     var mdr=e.target.closest(".m-drive");if(mdr){var did=mdr.getAttribute("data-mid");var dm=mcById(did);if(dm){dm.videoLink=mdr.value;stamp(dm);saveAll();var da=mdr.parentNode.querySelector(".m-open");var dv=safeUrl(mdr.value);if(da){if(dv){da.href=dv;da.style.display="";}else{da.style.display="none";}}}return;}
+    var prl=e.target.closest(".pr-link");if(prl){var pr=prospects.filter(function(z){return z.id===prl.getAttribute("data-id");})[0];if(pr){pr.url=prl.value;stamp(pr);saveAll();var pa=prl.parentNode.querySelector(".pr-open");var pu=safeUrl(prl.value);if(pa){if(pu){pa.href=pu;pa.style.display="";}else{pa.style.display="none";}}}return;}
     var n=e.target.closest(".vi-notes");if(n){var i1=findMV(n);if(i1.v){i1.v.notes=n.value;stamp(i1.m);saveAll();}return;}
     var l=e.target.closest(".vi-link");if(l){var i2=findMV(l);if(i2.v){i2.v.link=l.value;stamp(i2.m);saveAll();var cell=l.closest(".linkcell");var a=cell.querySelector(".vi-open");var u=safeUrl(l.value);if(u){a.href=u;a.style.display="";}else{a.style.display="none";}}return;}
     var evi=e.target.closest(".evinfo");if(evi){var ev2=events.filter(function(z){return z.id===evi.getAttribute("data-id");})[0];if(ev2){ev2.info=evi.value;stamp(ev2);saveAll();}return;}
@@ -1454,7 +1511,7 @@
   document.getElementById("calPrev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}renderCalendar();});
   document.getElementById("calNext").addEventListener("click",function(){calM++;if(calM>11){calM=0;calY++;}renderCalendar();});
   document.getElementById("calToday").addEventListener("click",function(){var d=new Date();calY=d.getFullYear();calM=d.getMonth();renderCalendar();});
-  document.getElementById("calGrid").addEventListener("click",function(e){var ev=e.target.closest(".calev");if(!ev)return;var id=ev.getAttribute("data-id");var kind=ev.getAttribute("data-kind");view=(kind==="event"||kind==="task")?"events":(kind==="ptask")?"partners":(kind==="content")?"content":"merch";filters={q:"",status:"",prio:"",country:"",owner:"",channel:""};expanded[id]=true;document.getElementById("search").value="";document.getElementById("fPrio").value="";document.getElementById("fCountry").value="";document.getElementById("fOwner").value="";document.getElementById("fChannel").value="";render();setTimeout(function(){var b=document.querySelector('[data-exp="'+id+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);});
+  document.getElementById("calGrid").addEventListener("click",function(e){var ev=e.target.closest(".calev");if(!ev)return;var id=ev.getAttribute("data-id");var kind=ev.getAttribute("data-kind");view=(kind==="event"||kind==="task")?"events":(kind==="ptask")?"partners":(kind==="content")?"content":(kind==="prospect")?"prospects":"merch";filters={q:"",status:"",prio:"",country:"",owner:"",channel:"",xtype:""};expanded[id]=true;document.getElementById("search").value="";document.getElementById("fPrio").value="";document.getElementById("fCountry").value="";document.getElementById("fOwner").value="";document.getElementById("fChannel").value="";render();setTimeout(function(){var b=document.querySelector('[data-exp="'+id+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);});
   document.getElementById("fCountry").addEventListener("change",function(){filters.country=this.value;render();});
   document.getElementById("clearBtn").addEventListener("click",function(){filters={q:"",status:defaultStatus(view),prio:"",country:"",owner:"",channel:"",xtype:""};["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var e=document.getElementById(idv);if(e)e.value="";});render();});
 
@@ -1478,7 +1535,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
