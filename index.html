@@ -886,7 +886,12 @@
   function ownerCaret(){return '<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg>';}
   function ownerCell(kind,id,val){var names=String(val||"").split(",").map(function(s){return s.trim();}).filter(Boolean);return '<button type="button" class="ownerpick" data-kind="'+kind+'" data-id="'+esc(id)+'">'+(names.length?esc(names.join(", ")):'<span class="chanplace">Owner</span>')+ownerCaret()+'</button>';}
   function firstName(n){return String(n||"").trim().split(/\s+/)[0]||"";}
-  function metaLine(x,extra){return '<div class="meta">added '+esc(x.added||"—")+(x.addedBy?' by '+esc(firstName(x.addedBy)):'')+'</div><div class="meta metasub">updated '+esc(x.updated||"—")+(x.updatedBy?' by '+esc(firstName(x.updatedBy)):'')+(extra||"")+'</div>';}
+  function shortDate(ds){if(/^\d{4}-\d{2}-\d{2}$/.test(ds||"")){var p=ds.split("-");return (MONTHS[parseInt(p[1],10)-1]||"").slice(0,3)+" "+parseInt(p[2],10);}return ds||"—";}
+  function metaLine(x,extra){
+    var who=firstName(x.updatedBy||x.addedBy);
+    var full="Added "+(x.added||"—")+(x.addedBy?" by "+x.addedBy:"")+"  ·  Updated "+(x.updated||"—")+(x.updatedBy?" by "+x.updatedBy:"");
+    return '<div class="meta" title="'+esc(full)+'">'+(who?esc(who)+' · ':'')+'updated '+esc(shortDate(x.updated||x.added))+(extra||"")+'</div>';
+  }
   var DELSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
   function linksEditor(x){
     var ls=Array.isArray(x.links)?x.links:[];
