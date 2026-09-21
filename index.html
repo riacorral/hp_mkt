@@ -489,6 +489,7 @@
       <div class="calmonth" id="calMonthLabel"></div>
       <button class="icon-btn" id="calNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       <button class="ghost" id="calToday">Today</button>
+      <select class="filter" id="calType"><option value="">All types</option><option value="events">Events</option><option value="tasks">Tasks</option><option value="videos">Videos</option></select>
       <select class="filter" id="calChannel"><option value="">All channels</option></select>
       <div class="calnote" id="calNote"></div>
     </div>
@@ -1107,26 +1108,28 @@
   }
   function sizeTitles(){Array.prototype.forEach.call(document.querySelectorAll("#rows .cell-title"),function(el){el.style.height="auto";el.style.height=el.scrollHeight+"px";});}
 
-  var calY, calM;
+  var calY, calM, calType="";
   (function(){var d=new Date(); calY=d.getFullYear(); calM=d.getMonth();})();
   var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
   var DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   function pad2(n){return String(n).length<2?"0"+n:String(n);}
   function fmtDate(y,m,d){return y+"-"+pad2(m+1)+"-"+pad2(d);}
+  function calTypeOk(kind){var t=calType;if(!t)return true;if(t==="events")return kind==="event";if(t==="tasks")return kind==="task"||kind==="ptask";if(t==="videos")return kind==="merch"||kind==="content";return true;}
   function calEntries(){
     var map={};
-    merch.forEach(function(m){(m.videos||[]).forEach(function(v){ if(!v.date)return; if(filters.channel && (v.channels||[]).indexOf(filters.channel)<0)return; (map[v.date]=map[v.date]||[]).push({kind:"merch",id:m.id,title:m.merchant,channels:v.channels||[],status:v.status}); });});
-    content.forEach(function(m){(m.videos||[]).forEach(function(v){ if(!v.date)return; if(filters.channel && (v.channels||[]).indexOf(filters.channel)<0)return; (map[v.date]=map[v.date]||[]).push({kind:"content",id:m.id,title:m.merchant,channels:v.channels||[],status:v.status}); });});
+    function pushVids(arr,kind){if(!calTypeOk(kind))return;arr.forEach(function(m){(m.videos||[]).forEach(function(v){ if(!v.date)return; if(filters.channel && (v.channels||[]).indexOf(filters.channel)<0)return; (map[v.date]=map[v.date]||[]).push({kind:kind,id:m.id,title:m.merchant,channels:v.channels||[],status:v.status}); });});}
+    pushVids(merch,"merch"); pushVids(content,"content");
     if(!filters.channel){ events.forEach(function(e){
-      if(isValidDate(e.date)) (map[e.date]=map[e.date]||[]).push({kind:"event",id:e.id,title:e.event||"Untitled event",channels:[],status:e.status});
-      (e.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"task",id:e.id,title:t.task||"Untitled task",channels:[],status:t.status}); });
+      if(isValidDate(e.date)&&calTypeOk("event")) (map[e.date]=map[e.date]||[]).push({kind:"event",id:e.id,title:e.event||"Untitled event",channels:[],status:e.status});
+      if(calTypeOk("task")) (e.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"task",id:e.id,title:t.task||"Untitled task",channels:[],status:t.status}); });
     });
-      partners.forEach(function(p){ (p.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"ptask",id:p.id,title:t.task||"Untitled task",channels:[],status:t.status}); }); });
+      if(calTypeOk("ptask")) partners.forEach(function(p){ (p.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"ptask",id:p.id,title:t.task||"Untitled task",channels:[],status:t.status}); }); });
     }
     return map;
   }
   function renderCalendar(){
     document.getElementById("calChannel").value=filters.channel;
+    document.getElementById("calType").value=calType;
     document.getElementById("calMonthLabel").textContent=MONTHS[calM]+" "+calY;
     var map=calEntries(), total=0; Object.keys(map).forEach(function(k){total+=map[k].length;});
     document.getElementById("calNote").textContent=total?(total+" scheduled item"+(total>1?"s":"")):"Nothing scheduled yet — set a date on a video or an event.";
@@ -1413,6 +1416,7 @@
   document.getElementById("fPrio").addEventListener("change",function(){filters.prio=this.value;render();});
   document.getElementById("fChannel").addEventListener("change",function(){filters.channel=this.value;render();});
   document.getElementById("calChannel").addEventListener("change",function(){filters.channel=this.value;renderCalendar();});
+  document.getElementById("calType").addEventListener("change",function(){calType=this.value;renderCalendar();});
   document.getElementById("calPrev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}renderCalendar();});
   document.getElementById("calNext").addEventListener("click",function(){calM++;if(calM>11){calM=0;calY++;}renderCalendar();});
   document.getElementById("calToday").addEventListener("click",function(){var d=new Date();calY=d.getFullYear();calM=d.getMonth();renderCalendar();});
