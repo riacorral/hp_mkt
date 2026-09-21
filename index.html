@@ -875,7 +875,7 @@
     return arr;
   }
   // ---- item table ----
-  function thItems(){return '<tr>'+sth("items","item","Action item",'width:28%')+sth("items","owner","Owner")+sth("items","priority","Priority")+sth("items","status","Status")+sth("items","due","Due")+'<th style="width:26%">Notes &amp; reference link</th><th style="text-align:right">Actions</th></tr>';}
+  function thItems(){return '<tr>'+sth("items","item","Action item",'width:28%')+sth("items","owner","Owner")+sth("items","status","Status")+sth("items","due","Due")+'<th style="width:26%">Notes &amp; reference link</th><th style="text-align:right">Actions</th></tr>';}
   var LINKSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
   function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:kind==="event"?events:kind==="partner"?partners:mcAll();return arr.filter(function(r){return r.id===id;})[0];}
   function cellIn(kind,id,f,val,ph){return '<input class="cellin" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" value="'+esc(val==null?"":val)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(f==="country"?' list="countryList"':(f==="owner"?' list="ownerList"':''))+'>';}
@@ -885,7 +885,8 @@
   function ownerNamesAll(){var s=[];items.concat(merch).concat(content).concat(events).concat(partners).forEach(function(x){String(x.owner||"").split(",").map(function(t){return t.trim();}).forEach(function(n){if(n&&s.indexOf(n)<0)s.push(n);});});s.sort();return s;}
   function ownerCaret(){return '<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg>';}
   function ownerCell(kind,id,val){var names=String(val||"").split(",").map(function(s){return s.trim();}).filter(Boolean);return '<button type="button" class="ownerpick" data-kind="'+kind+'" data-id="'+esc(id)+'">'+(names.length?esc(names.join(", ")):'<span class="chanplace">Owner</span>')+ownerCaret()+'</button>';}
-  function metaLine(x,extra){return '<div class="meta">added '+esc(x.added||"—")+(x.addedBy?' by '+esc(x.addedBy):'')+'</div><div class="meta metasub">updated '+esc(x.updated||"—")+(x.updatedBy?' by '+esc(x.updatedBy):'')+(extra||"")+'</div>';}
+  function firstName(n){return String(n||"").trim().split(/\s+/)[0]||"";}
+  function metaLine(x,extra){return '<div class="meta">added '+esc(x.added||"—")+(x.addedBy?' by '+esc(firstName(x.addedBy)):'')+'</div><div class="meta metasub">updated '+esc(x.updated||"—")+(x.updatedBy?' by '+esc(firstName(x.updatedBy)):'')+(extra||"")+'</div>';}
   var DELSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
   function linksEditor(x){
     var ls=Array.isArray(x.links)?x.links:[];
@@ -907,7 +908,6 @@
     return '<tr class="main" data-kind="item" data-id="'+esc(x.id)+'">'+
       '<td class="c-item"><textarea class="cellin cell-title" data-kind="item" data-id="'+esc(x.id)+'" data-f="item" rows="1" placeholder="Action item">'+esc(x.item||"")+'</textarea>'+metaLine(x)+'</td>'+
       '<td>'+ownerCell("item",x.id,x.owner)+'</td>'+
-      '<td>'+prioSel("item",x.id,x.priority)+'</td>'+
       '<td>'+statusControl(x,"item")+'</td>'+
       '<td>'+dueCell(x)+'</td>'+
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="item" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea>'+linksEditor(x)+'</td>'+
@@ -917,7 +917,7 @@
 
   // ---- merchant table ----
   function ctypeSel(id,val){return '<select class="cellsel" data-kind="merch" data-id="'+esc(id)+'" data-f="ctype"><option value=""'+(val?"":" selected")+'>—</option>'+CTYPES.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
-  function thMerch(){var nm=(view==="content")?"Content":"Merchant";return '<tr><th class="c-exp"></th>'+sth(view,"merchant",nm,'width:20%')+sth(view,"owner","Owner")+sth(view,"priority","Priority")+sth(view,"status","Status")+(view==="content"?sth(view,"ctype","Type"):"")+sth(view,"country","Country")+'<th style="width:22%">Notes</th><th>Drive</th><th>Script</th><th style="text-align:right">Actions</th></tr>';}
+  function thMerch(){var nm=(view==="content")?"Content":"Merchant";return '<tr><th class="c-exp"></th>'+sth(view,"merchant",nm,'width:20%')+sth(view,"owner","Owner")+sth(view,"status","Status")+(view==="content"?sth(view,"ctype","Type"):"")+sth(view,"country","Country")+'<th style="width:22%">Notes</th><th>Drive</th><th>Script</th><th style="text-align:right">Actions</th></tr>';}
   function chanChip(code){var name=(CHANNELS.filter(function(c){return c.code===code;})[0]||{}).name||code; return '<span class="chan '+esc(code)+'" title="'+esc(name)+'">'+esc(code)+'</span>';}
   var CH_CARET='<svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg>';
   function chanChipsOnly(v){return (v.channels&&v.channels.length)?v.channels.map(function(c){return chanChip(c);}).join(" "):'<span class="chanplace">＋ Channels</span>';}
@@ -950,7 +950,6 @@
       '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
       '<td class="c-item"><textarea class="cellin cell-title" data-kind="merch" data-id="'+esc(x.id)+'" data-f="merchant" rows="1" placeholder="'+(view==="content"?"Content name":"Merchant")+'">'+esc(x.merchant||"")+'</textarea>'+metaLine(x,vc?' · '+vc+' item'+(vc>1?"s":""):"")+'</td>'+
       '<td>'+ownerCell("merch",x.id,x.owner)+'</td>'+
-      '<td>'+prioSel("merch",x.id,x.priority)+'</td>'+
       '<td>'+statusControl(x,"merch")+'</td>'+
       (view==="content"?'<td>'+ctypeSel(x.id,x.ctype)+'</td>':'')+
       '<td>'+cellIn("merch",x.id,"country",x.country,"Country")+'</td>'+
@@ -959,7 +958,7 @@
       '<td style="min-width:160px">'+scriptCell+'</td>'+
       '<td class="c-actions"><button class="icon-btn" data-mdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
-    var sub= open? '<tr class="subrow"><td colspan="'+(view==="content"?11:10)+'"><div class="subwrap"><div class="subhead">Final content'+(vc?' · '+vc:'')+'</div>'+videosPanel(x)+'</div></td></tr>' : '';
+    var sub= open? '<tr class="subrow"><td colspan="'+(view==="content"?10:9)+'"><div class="subwrap"><div class="subhead">Final content'+(vc?' · '+vc:'')+'</div>'+videosPanel(x)+'</div></td></tr>' : '';
     return main+sub;
   }
 
@@ -993,7 +992,7 @@
 
   // ---- events table ----
   function etypeSel(id,val){return '<select class="cellsel" data-kind="event" data-id="'+esc(id)+'" data-f="etype"><option value=""'+(val?"":" selected")+'>—</option>'+EVENT_TYPES.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
-  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:22%')+sth("events","owner","Owner")+sth("events","priority","Priority")+sth("events","status","Status")+sth("events","etype","Type")+sth("events","format","Format")+sth("events","date","Date")+sth("events","country","Country")+'<th>Project</th><th style="width:20%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:22%')+sth("events","owner","Owner")+sth("events","status","Status")+sth("events","etype","Type")+sth("events","format","Format")+sth("events","date","Date")+sth("events","country","Country")+'<th>Project</th><th style="width:20%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function eventDateCell(x){var d=isValidDate(x.date)?x.date:"";var over=d && d<today() && isOpen(x);return '<div class="datewrap">'+(over?'<span class="odflag" title="Passed">⚠</span>':'')+'<input class="cellin cell-date'+(over?" overdue":"")+'" type="date" data-kind="event" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'" title="'+(over?"Event date passed":"Event date")+'"></div>';}
   var TASKDEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
   function tasksPanel(x){
@@ -1042,7 +1041,6 @@
       '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
       '<td class="c-item"><textarea class="cellin cell-title" data-kind="event" data-id="'+esc(x.id)+'" data-f="event" rows="1" placeholder="Event name">'+esc(x.event||"")+'</textarea>'+metaLine(x,tc?' · '+tc+' task'+(tc>1?"s":""):"")+'</td>'+
       '<td>'+ownerCell("event",x.id,x.owner)+'</td>'+
-      '<td>'+prioSel("event",x.id,x.priority)+'</td>'+
       '<td>'+statusControl(x,"event")+'</td>'+
       '<td>'+etypeSel(x.id,x.etype)+'</td>'+
       '<td>'+formatSel("event",x.id,x.format)+'</td>'+
@@ -1053,7 +1051,7 @@
       '<td class="c-actions"><button class="icon-btn gcalbtn" data-gcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-edel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
     var info='<div class="infowrap"><div class="subhead">Partners &amp; general info</div><textarea class="evinfo celltxt" data-id="'+esc(x.id)+'" placeholder="Partners, sponsors, contacts, venue, budget, links, general info…">'+esc(x.info||"")+'</textarea></div>';
-    var sub= open? '<tr class="subrow"><td colspan="12"><div class="subwrap">'+info+'<div class="subhead" style="margin-top:16px">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
+    var sub= open? '<tr class="subrow"><td colspan="11"><div class="subwrap">'+info+'<div class="subhead" style="margin-top:16px">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
     return main+sub;
   }
   function findET(el){var ee=el.closest("[data-eid]");var eid=ee?ee.getAttribute("data-eid"):null;var tr=el.closest("[data-tid]");var tid=tr?tr.getAttribute("data-tid"):null;var ev=events.concat(partners).filter(function(z){return z.id===eid;})[0];var t=(ev&&tid)?(ev.tasks||[]).filter(function(z){return z.id===tid;})[0]:null;return {e:ev,t:t};}
@@ -1061,7 +1059,7 @@
   // ---- partnerships ----
   function partnerName(id){var p=partners.filter(function(z){return z.id===id;})[0];return p?(p.partner||"Untitled"):"";}
   function partnerSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="partnerId"><option value=""'+(val?"":" selected")+'>—</option>'+partners.map(function(p){return '<option value="'+esc(p.id)+'"'+(p.id===val?" selected":"")+'>'+esc(p.partner||"Untitled")+'</option>';}).join("")+'</select>';}
-  function thPartners(){return '<tr><th class="c-exp"></th>'+sth("partners","partner","Project",'width:24%')+sth("partners","owner","Owner")+sth("partners","priority","Priority")+sth("partners","status","Status")+sth("partners","country","Country")+'<th style="width:26%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function thPartners(){return '<tr><th class="c-exp"></th>'+sth("partners","partner","Project",'width:24%')+sth("partners","owner","Owner")+sth("partners","status","Status")+sth("partners","country","Country")+'<th style="width:26%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function rowPartner(x){
     var open=!!expanded[x.id];
     var linked=events.filter(function(e){return e.partnerId===x.id;});
@@ -1070,7 +1068,6 @@
       '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle details"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
       '<td class="c-item"><textarea class="cellin cell-title" data-kind="partner" data-id="'+esc(x.id)+'" data-f="partner" rows="1" placeholder="Project name">'+esc(x.partner||"")+'</textarea>'+metaLine(x,lc?' · '+lc+' event'+(lc>1?"s":""):"")+'</td>'+
       '<td>'+ownerCell("partner",x.id,x.owner)+'</td>'+
-      '<td>'+prioSel("partner",x.id,x.priority)+'</td>'+
       '<td>'+statusControl(x,"partner")+'</td>'+
       '<td>'+cellIn("partner",x.id,"country",x.country,"Country")+'</td>'+
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="partner" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
@@ -1081,7 +1078,7 @@
     var ebody=elist||'<tr><td colspan="4" class="novids">No linked events yet — add one below.</td></tr>';
     var epanel='<div class="vidpanel"><table class="vids"><thead><tr><th>Event</th><th>Date</th><th>Status</th><th></th></tr></thead><tbody>'+ebody+'</tbody></table><button class="addeventinline" data-pid="'+esc(x.id)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add event</button></div>';
     var ptc=(x.tasks||[]).length;
-    var sub= open? '<tr class="subrow"><td colspan="8"><div class="subwrap">'+info+
+    var sub= open? '<tr class="subrow"><td colspan="7"><div class="subwrap">'+info+
       '<div class="subhead" style="margin-top:16px">Tasks'+(ptc?' · '+ptc:'')+'</div>'+tasksPanel(x)+
       '<div class="subhead" style="margin-top:16px">Linked events'+(lc?' · '+lc:'')+'</div>'+epanel+'</div></td></tr>' : '';
     return main+sub;
@@ -1113,7 +1110,7 @@
     document.getElementById("newBtn").style.display=(isCal||isVids||isReport)?"none":"";
     if(isCal){ renderCalendar(); return; }
     if(isReport){ renderReport(); return; }
-    document.getElementById("fPrio").style.display=(view==="items"||view==="merch"||isContent||isEvents||isPartners)?"":"none";
+    document.getElementById("fPrio").style.display="none";
     document.getElementById("fCountry").style.display=(view==="merch"||isContent||isVids||isEvents||isPartners)?"":"none";
     document.getElementById("fChannel").style.display=(view==="merch"||isContent||isVids)?"":"none";
     document.getElementById("fType").style.display=(isContent||isEvents)?"":"none";
