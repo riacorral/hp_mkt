@@ -236,6 +236,13 @@
   .calev-maybe{background:var(--s-amber-bg)}
   .calev-social{background:var(--cal-social-bg)}
   .shoottag{color:var(--ink-2); border-color:var(--border-strong)}
+  .callist{display:flex; flex-direction:column}
+  .cl-day{display:flex; gap:14px; align-items:flex-start; padding:9px 4px; border-bottom:1px solid var(--border)}
+  .cl-date{width:132px; flex:none; font-weight:600; font-size:12.5px; color:var(--ink-2); padding-top:3px; font-variant-numeric:tabular-nums}
+  .cl-items{display:flex; flex-wrap:wrap; gap:6px; flex:1; min-width:0}
+  .cl-items .calev{min-width:170px; max-width:280px}
+  .cl-empty{padding:24px; text-align:center; color:var(--ink-3)}
+  tr.rowflash > td{background:var(--accent-soft)}
   .maybetag{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
   .tsktag{color:var(--cal-task-fg); border-color:var(--cal-task-fg)}
   .vidtag{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
@@ -505,12 +512,14 @@
       <div class="calmonth" id="calMonthLabel"></div>
       <button class="icon-btn" id="calNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       <button class="ghost" id="calToday">Today</button>
+      <button class="ghost" id="calViewToggle">List view</button>
       <div class="tabmore-wrap"><button class="filter" id="calTypeBtn" type="button">All types <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg></button><div class="tabmore-menu" id="calTypeMenu" hidden></div></div>
       <div class="tabmore-wrap"><button class="filter" id="calCountryBtn" type="button">All countries <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg></button><div class="tabmore-menu" id="calCountryMenu" hidden></div></div>
       <select class="filter" id="calChannel"><option value="">All channels</option></select>
       <div class="calnote" id="calNote"></div>
     </div>
     <div class="calgrid" id="calGrid"></div>
+    <div class="callist" id="calList" style="display:none"></div>
   </div>
 
   <div id="reportWrap" style="display:none"></div>
@@ -1214,7 +1223,7 @@
   }
   function sizeTitles(){Array.prototype.forEach.call(document.querySelectorAll("#rows .cell-title"),function(el){el.style.height="auto";el.style.height=el.scrollHeight+"px";});}
 
-  var calY, calM, calTypes=[], calCountries=[];
+  var calY, calM, calTypes=[], calCountries=[], calMode="month";
   var CAL_TYPES=[{k:"events",l:"Events"},{k:"tasks",l:"Tasks"},{k:"videos",l:"Videos"},{k:"potential",l:"Potential"}];
   function calCat(kind){return (kind==="event")?"events":(kind==="task"||kind==="ptask")?"tasks":(kind==="merch"||kind==="content"||kind==="cshoot")?"videos":(kind==="prospect")?"potential":"";}
   function renderCalTypeMenu(){var m=document.getElementById("calTypeMenu");if(!m)return;m.innerHTML=CAL_TYPES.map(function(t){return '<label class="tabmore-item" style="cursor:pointer"><input type="checkbox" class="calt-chk" value="'+t.k+'"'+(calTypes.indexOf(t.k)>=0?" checked":"")+' style="margin-right:8px">'+esc(t.l)+'</label>';}).join("");
@@ -1250,13 +1259,34 @@
     }
     return map;
   }
+  function calChipHtml(ev){
+    var isEv=ev.kind==="event", isTask=(ev.kind==="task"||ev.kind==="ptask"), isProsp=ev.kind==="prospect", isShoot=ev.kind==="cshoot";
+    var tag=isEv?'<span class="evtag">'+esc((ev.etype||"EVENT").toUpperCase())+'</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':isProsp?'<span class="evtag maybetag">MAYBE</span> ':isShoot?'<span class="evtag shoottag">'+esc((ev.ctype||"CONTENT").toUpperCase())+'</span> ':'';
+    return '<div class="calev'+(isEv?" calev-ev":isTask?" calev-task":isProsp?" calev-maybe":" calev-social")+'" data-kind="'+esc(ev.kind)+'" data-id="'+esc(ev.id)+'"><div class="cm">'+tag+esc(ev.title)+'</div><div class="csub">'+
+      (ev.channels||[]).map(function(ch){return '<span class="cch chan '+esc(ch)+'">'+esc(ch)+'</span>';}).join("")+
+      (ev.status?'<span class="pill '+statusCls(ev.status)+'" style="font-size:9.5px;padding:1px 6px">'+esc(ev.status)+'</span>':'')+'</div></div>';
+  }
+  function prettyDate(ds){var p=ds.split("-");var dt=new Date(+p[0],+p[1]-1,+p[2]);return DOW[dt.getDay()]+" · "+(MONTHS[+p[1]-1]||"").slice(0,3)+" "+(+p[2])+", "+p[0];}
+  function renderCalList(map){
+    var list=document.getElementById("calList");
+    var keys=Object.keys(map).sort();
+    if(!keys.length){list.innerHTML='<div class="cl-empty">Nothing scheduled yet.</div>';return;}
+    list.innerHTML=keys.map(function(ds){return '<div class="cl-day"><div class="cl-date">'+esc(prettyDate(ds))+'</div><div class="cl-items">'+map[ds].map(calChipHtml).join("")+'</div></div>';}).join("");
+  }
   function renderCalendar(){
     document.getElementById("calChannel").value=filters.channel;
     renderCalTypeMenu(); renderCalCountryMenu();
-    document.getElementById("calMonthLabel").textContent=MONTHS[calM]+" "+calY;
+    var isList=(calMode==="list");
+    document.getElementById("calViewToggle").textContent=isList?"Month view":"List view";
+    document.getElementById("calPrev").style.display=isList?"none":"";
+    document.getElementById("calNext").style.display=isList?"none":"";
+    document.getElementById("calMonthLabel").textContent=isList?"All scheduled":(MONTHS[calM]+" "+calY);
     var map=calEntries(), total=0; Object.keys(map).forEach(function(k){total+=map[k].length;});
     document.getElementById("calNote").textContent=total?(total+" scheduled item"+(total>1?"s":"")):"Nothing scheduled yet — set a date on a video or an event.";
-    var grid=document.getElementById("calGrid"); grid.innerHTML="";
+    var grid=document.getElementById("calGrid"), list=document.getElementById("calList");
+    grid.style.display=isList?"none":""; list.style.display=isList?"":"none";
+    if(isList){ renderCalList(map); return; }
+    grid.innerHTML="";
     DOW.forEach(function(d){var h=document.createElement("div");h.className="caldow";h.textContent=d;grid.appendChild(h);});
     var startDow=new Date(calY,calM,1).getDay();
     var daysInMonth=new Date(calY,calM+1,0).getDate();
@@ -1269,16 +1299,17 @@
       var cell=document.createElement("div");
       cell.className="calcell"+(dt.getMonth()!==calM?" out":"")+(ds===todayStr?" today":"");
       var html='<div class="caldate">'+dt.getDate()+'</div>';
-      evs.forEach(function(ev){
-        var isEv=ev.kind==="event", isTask=(ev.kind==="task"||ev.kind==="ptask"), isProsp=ev.kind==="prospect", isShoot=ev.kind==="cshoot";
-        var tag=isEv?'<span class="evtag">'+esc((ev.etype||"EVENT").toUpperCase())+'</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':isProsp?'<span class="evtag maybetag">MAYBE</span> ':isShoot?'<span class="evtag shoottag">'+esc((ev.ctype||"CONTENT").toUpperCase())+'</span> ':'';
-        html+='<div class="calev'+(isEv?" calev-ev":isTask?" calev-task":isProsp?" calev-maybe":" calev-social")+'" data-kind="'+esc(ev.kind)+'" data-id="'+esc(ev.id)+'"><div class="cm">'+tag+esc(ev.title)+'</div><div class="csub">'+
-          (ev.channels||[]).map(function(ch){return '<span class="cch chan '+esc(ch)+'">'+esc(ch)+'</span>';}).join("")+
-          (ev.status?'<span class="pill '+statusCls(ev.status)+'" style="font-size:9.5px;padding:1px 6px">'+esc(ev.status)+'</span>':'')+'</div></div>';
-      });
+      evs.forEach(function(ev){ html+=calChipHtml(ev); });
       cell.innerHTML=html;
       grid.appendChild(cell);
     }
+  }
+  function calOpen(kind,id){
+    view=(kind==="event"||kind==="task")?"events":(kind==="ptask")?"partners":(kind==="content"||kind==="cshoot")?"content":(kind==="prospect")?"prospects":"merch";
+    filters={q:"",status:"",prio:"",country:"",owner:"",channel:"",xtype:""}; expanded[id]=true;
+    ["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});
+    render();
+    setTimeout(function(){var tr=document.querySelector('#rows tr.main[data-id="'+id+'"]');if(tr){tr.scrollIntoView({behavior:"smooth",block:"center"});tr.classList.add("rowflash");setTimeout(function(){tr.classList.remove("rowflash");},1800);}},80);
   }
 
   function renderReport(){
@@ -1553,7 +1584,10 @@
   document.getElementById("calPrev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}renderCalendar();});
   document.getElementById("calNext").addEventListener("click",function(){calM++;if(calM>11){calM=0;calY++;}renderCalendar();});
   document.getElementById("calToday").addEventListener("click",function(){var d=new Date();calY=d.getFullYear();calM=d.getMonth();renderCalendar();});
-  document.getElementById("calGrid").addEventListener("click",function(e){var ev=e.target.closest(".calev");if(!ev)return;var id=ev.getAttribute("data-id");var kind=ev.getAttribute("data-kind");view=(kind==="event"||kind==="task")?"events":(kind==="ptask")?"partners":(kind==="content"||kind==="cshoot")?"content":(kind==="prospect")?"prospects":"merch";filters={q:"",status:"",prio:"",country:"",owner:"",channel:"",xtype:""};expanded[id]=true;document.getElementById("search").value="";document.getElementById("fPrio").value="";document.getElementById("fCountry").value="";document.getElementById("fOwner").value="";document.getElementById("fChannel").value="";render();setTimeout(function(){var b=document.querySelector('[data-exp="'+id+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);});
+  function onCalClick(e){var ev=e.target.closest(".calev");if(!ev)return;calOpen(ev.getAttribute("data-kind"),ev.getAttribute("data-id"));}
+  document.getElementById("calGrid").addEventListener("click",onCalClick);
+  document.getElementById("calList").addEventListener("click",onCalClick);
+  document.getElementById("calViewToggle").addEventListener("click",function(){calMode=(calMode==="list")?"month":"list";renderCalendar();});
   document.getElementById("fCountry").addEventListener("change",function(){filters.country=this.value;render();});
   document.getElementById("clearBtn").addEventListener("click",function(){filters={q:"",status:defaultStatus(view),prio:"",country:"",owner:"",channel:"",xtype:""};["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var e=document.getElementById(idv);if(e)e.value="";});render();});
 
