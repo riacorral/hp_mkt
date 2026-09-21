@@ -501,7 +501,7 @@
       <div class="calmonth" id="calMonthLabel"></div>
       <button class="icon-btn" id="calNext" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
       <button class="ghost" id="calToday">Today</button>
-      <select class="filter" id="calType"><option value="">All types</option><option value="events">Events</option><option value="tasks">Tasks</option><option value="videos">Videos</option><option value="potential">Potential</option></select>
+      <div class="tabmore-wrap"><button class="filter" id="calTypeBtn" type="button">All types <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg></button><div class="tabmore-menu" id="calTypeMenu" hidden></div></div>
       <select class="filter" id="calChannel"><option value="">All channels</option></select>
       <div class="calnote" id="calNote"></div>
     </div>
@@ -1126,7 +1126,7 @@
   function prLinkCell(x){var u=safeUrl(x.url);return '<div class="linkcell"><input class="pr-link" data-id="'+esc(x.id)+'" type="url" placeholder="https://…" value="'+esc(x.url||"")+'"><a class="pr-open" href="'+esc(u||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(u?"":"display:none")+'">open</a></div>';}
   function prDateCell(x){var d=isValidDate(x.date)?x.date:"";return '<div class="datewrap"><input class="cellin cell-date" type="date" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'"></div>';}
   function gcalProspectUrl(x){var p=["action=TEMPLATE","text="+encodeURIComponent(x.name||"Event")];if(isValidDate(x.date))p.push("dates="+ymd(x.date)+"/"+nextYmd(isValidDate(x.endDate)?x.endDate:x.date));var det=[];if(x.notes)det.push(x.notes);if(x.url)det.push(x.url);if(det.length)p.push("details="+encodeURIComponent(det.join("\n\n")));var loc=[x.venue,x.country].filter(Boolean).join(", ");if(loc)p.push("location="+encodeURIComponent(loc));GCAL_GUESTS.forEach(function(g){p.push("add="+encodeURIComponent(g));});return "https://calendar.google.com/calendar/render?"+p.join("&");}
-  function thProspects(){return '<tr>'+sth("prospects","name","Event",'width:24%')+sth("prospects","ptype","Type")+sth("prospects","tier","Tier")+sth("prospects","date","Date")+sth("prospects","country","Country")+sth("prospects","status","Status")+'<th>Link</th><th style="width:22%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function thProspects(){return '<tr>'+sth("prospects","name","Event",'width:24%')+sth("prospects","ptype","Type")+sth("prospects","tier","Tier")+sth("prospects","date","Date")+sth("prospects","country","Country")+'<th>Link</th><th style="width:22%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function rowProspect(x){
     var range=shortDate(x.date)+((x.endDate&&x.endDate!==x.date)?" – "+shortDate(x.endDate):"");
     return '<tr class="main" data-kind="prospect" data-id="'+esc(x.id)+'">'+
@@ -1135,7 +1135,6 @@
       '<td>'+tierSel(x.id,x.tier)+'</td>'+
       '<td>'+prDateCell(x)+'</td>'+
       '<td>'+cellIn("prospect",x.id,"country",x.country,"Country")+'</td>'+
-      '<td>'+prStatusSel(x.id,x.status)+'</td>'+
       '<td style="min-width:150px">'+prLinkCell(x)+'</td>'+
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
       '<td class="c-actions"><button class="icon-btn" data-prconv="'+esc(x.id)+'" title="Convert to Event" aria-label="Convert to Event"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button class="icon-btn gcalbtn" data-prgcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-prdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
@@ -1144,12 +1143,12 @@
   function newProspect(){var p={id:uid("pr"),name:"",ptype:"",tier:"",date:"",endDate:"",country:"",venue:"",url:"",status:"Considering",owner:"",notes:"",added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};prospects.unshift(p);saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="prospect"][data-id="'+p.id+'"]');if(ta)ta.focus();},50);}
   function delProspect(id){var x=prospects.filter(function(p){return p.id===id;})[0];if(!x)return;askConfirm("Delete this prospect?",'"'+(x.name||"Untitled")+'"',function(){prospects=prospects.filter(function(p){return p.id!==id;});saveAll();refreshOptions();render();toast("Prospect deleted");},{danger:true,okLabel:"Delete"});}
   function convertToEvent(id){var p=prospects.filter(function(z){return z.id===id;})[0];if(!p)return;
-    askConfirm("Convert to a confirmed Event?",'"'+(p.name||"Untitled")+'" will be added to Events (kept here, marked Going).',function(){
+    askConfirm("Convert to a confirmed Event?",'"'+(p.name||"Untitled")+'" moves from Prospects into Events.',function(){
       var notes=[p.notes,p.venue?("Venue: "+p.venue):"",p.url?("Source: "+p.url):""].filter(Boolean).join("\n");
       var e={id:uid("ev"),event:p.name||"",owner:"",priority:"Medium",status:"Not started",etype:(p.ptype==="Expo"?"Expo":"Other"),format:"Physical",date:isValidDate(p.date)?p.date:"",country:p.country||"",notes:notes,info:(p.url||""),partnerId:"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};
-      events.unshift(e); p.status="Going"; stamp(p);
+      events.unshift(e); prospects=prospects.filter(function(z){return z.id!==id;});
       expanded[e.id]=true; view="events"; filters={q:"",status:defaultStatus("events"),prio:"",country:"",owner:"",channel:"",xtype:""}; ["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});
-      saveAll(); refreshOptions(); render(); toast("Converted to Event — prospect marked Going");
+      saveAll(); refreshOptions(); render(); toast("Converted to Event");
       setTimeout(function(){var b=document.querySelector('[data-exp="'+e.id+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);
     },{okLabel:"Convert"});
   }
@@ -1186,6 +1185,7 @@
     document.getElementById("tableCard").className="card "+(view==="items"?"view-items":isVids?"view-vids":isEvents?"view-events":isPartners?"view-partners":isContent?"view-content":isProspects?"view-prospects":"view-merch");
     document.getElementById("newLabel").textContent = view==="items"?"New item":isEvents?"New event":isPartners?"New project":isContent?"New content":isProspects?"New prospect":"New merchant";
     document.getElementById("search").placeholder = view==="items"?"Search items, owners, notes…":isVids?"Search videos, merchants, channels…":isEvents?"Search events, owners, tasks…":isPartners?"Search projects, owners, notes…":isContent?"Search content, owners, channels…":isProspects?"Search prospects, venue, type…":"Search merchants, owners, videos…";
+    document.getElementById("fStatus").style.display=isProspects?"none":"";
     syncStatusFilter();
     document.getElementById("fChannel").value=filters.channel;
     var thead=document.getElementById("thead"), tb=document.getElementById("rows");
@@ -1204,33 +1204,38 @@
   }
   function sizeTitles(){Array.prototype.forEach.call(document.querySelectorAll("#rows .cell-title"),function(el){el.style.height="auto";el.style.height=el.scrollHeight+"px";});}
 
-  var calY, calM, calType="";
+  var calY, calM, calTypes=[];
+  var CAL_TYPES=[{k:"events",l:"Events"},{k:"tasks",l:"Tasks"},{k:"videos",l:"Videos"},{k:"potential",l:"Potential"}];
+  function calCat(kind){return (kind==="event")?"events":(kind==="task"||kind==="ptask")?"tasks":(kind==="merch"||kind==="content")?"videos":(kind==="prospect")?"potential":"";}
+  function renderCalTypeMenu(){var m=document.getElementById("calTypeMenu");if(!m)return;m.innerHTML=CAL_TYPES.map(function(t){return '<label class="tabmore-item" style="cursor:pointer"><input type="checkbox" class="calt-chk" value="'+t.k+'"'+(calTypes.indexOf(t.k)>=0?" checked":"")+' style="margin-right:8px">'+esc(t.l)+'</label>';}).join("");
+    var b=document.getElementById("calTypeBtn");var lab=!calTypes.length?"All types":CAL_TYPES.filter(function(t){return calTypes.indexOf(t.k)>=0;}).map(function(t){return t.l;}).join(", ");
+    b.innerHTML=esc(lab)+' <svg class="caret" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:11px;height:11px"><path d="M6 9l6 6 6-6"/></svg>';}
   (function(){var d=new Date(); calY=d.getFullYear(); calM=d.getMonth();})();
   var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
   var DOW=["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
   function pad2(n){return String(n).length<2?"0"+n:String(n);}
   function fmtDate(y,m,d){return y+"-"+pad2(m+1)+"-"+pad2(d);}
-  function calTypeOk(kind){var t=calType;if(!t)return true;if(t==="events")return kind==="event";if(t==="tasks")return kind==="task"||kind==="ptask";if(t==="videos")return kind==="merch"||kind==="content";if(t==="potential")return kind==="prospect";return true;}
+  function calTypeOk(kind){if(!calTypes.length)return true;return calTypes.indexOf(calCat(kind))>=0;}
   function calEntries(){
     var map={};
     function pushVids(arr,kind){if(!calTypeOk(kind))return;arr.forEach(function(m){(m.videos||[]).forEach(function(v){ if(!v.date)return; if(filters.channel && (v.channels||[]).indexOf(filters.channel)<0)return; (map[v.date]=map[v.date]||[]).push({kind:kind,id:m.id,title:m.merchant,channels:v.channels||[],status:v.status}); });});}
     pushVids(merch,"merch"); pushVids(content,"content");
     if(!filters.channel){ events.forEach(function(e){
-      if(isValidDate(e.date)&&calTypeOk("event")) (map[e.date]=map[e.date]||[]).push({kind:"event",id:e.id,title:e.event||"Untitled event",channels:[],status:e.status});
+      if(isValidDate(e.date)&&calTypeOk("event")) (map[e.date]=map[e.date]||[]).push({kind:"event",id:e.id,title:e.event||"Untitled event",channels:[],status:e.status,etype:e.etype});
       if(calTypeOk("task")) (e.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"task",id:e.id,title:t.task||"Untitled task",channels:[],status:t.status}); });
     });
       if(calTypeOk("ptask")) partners.forEach(function(p){ (p.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"ptask",id:p.id,title:t.task||"Untitled task",channels:[],status:t.status}); }); });
-      if(calTypeOk("prospect")) prospects.forEach(function(p){ if(!isValidDate(p.date))return; if(p.status==="Declined")return;
+      if(calTypeOk("prospect")) prospects.forEach(function(p){ if(!isValidDate(p.date))return;
         var end=isValidDate(p.endDate)&&p.endDate>=p.date?p.endDate:p.date;
         var d=new Date(p.date+"T00:00:00"), ed=new Date(end+"T00:00:00"), guard=0;
-        while(d<=ed && guard++<70){ var ds=fmtDate(d.getFullYear(),d.getMonth(),d.getDate()); (map[ds]=map[ds]||[]).push({kind:"prospect",id:p.id,title:p.name||"Untitled",channels:[],status:p.status}); d.setDate(d.getDate()+1); }
+        while(d<=ed && guard++<70){ var ds=fmtDate(d.getFullYear(),d.getMonth(),d.getDate()); (map[ds]=map[ds]||[]).push({kind:"prospect",id:p.id,title:p.name||"Untitled",channels:[],status:""}); d.setDate(d.getDate()+1); }
       });
     }
     return map;
   }
   function renderCalendar(){
     document.getElementById("calChannel").value=filters.channel;
-    document.getElementById("calType").value=calType;
+    renderCalTypeMenu();
     document.getElementById("calMonthLabel").textContent=MONTHS[calM]+" "+calY;
     var map=calEntries(), total=0; Object.keys(map).forEach(function(k){total+=map[k].length;});
     document.getElementById("calNote").textContent=total?(total+" scheduled item"+(total>1?"s":"")):"Nothing scheduled yet — set a date on a video or an event.";
@@ -1249,10 +1254,10 @@
       var html='<div class="caldate">'+dt.getDate()+'</div>';
       evs.forEach(function(ev){
         var isEv=ev.kind==="event", isTask=(ev.kind==="task"||ev.kind==="ptask"), isProsp=ev.kind==="prospect";
-        var tag=isEv?'<span class="evtag">EVENT</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':isProsp?'<span class="evtag maybetag">MAYBE</span> ':'';
+        var tag=isEv?'<span class="evtag">'+esc((ev.etype||"EVENT").toUpperCase())+'</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':isProsp?'<span class="evtag maybetag">MAYBE</span> ':'';
         html+='<div class="calev'+(isEv?" calev-ev":isTask?" calev-task":isProsp?" calev-maybe":"")+'" data-kind="'+esc(ev.kind)+'" data-id="'+esc(ev.id)+'"><div class="cm">'+tag+esc(ev.title)+'</div><div class="csub">'+
           (ev.channels||[]).map(function(ch){return '<span class="cch chan '+esc(ch)+'">'+esc(ch)+'</span>';}).join("")+
-          '<span class="pill '+statusCls(ev.status)+'" style="font-size:9.5px;padding:1px 6px">'+esc(ev.status)+'</span></div></div>';
+          (ev.status?'<span class="pill '+statusCls(ev.status)+'" style="font-size:9.5px;padding:1px 6px">'+esc(ev.status)+'</span>':'')+'</div></div>';
       });
       cell.innerHTML=html;
       grid.appendChild(cell);
@@ -1522,7 +1527,9 @@
   document.getElementById("fChannel").addEventListener("change",function(){filters.channel=this.value;render();});
   document.getElementById("fType").addEventListener("change",function(){filters.xtype=this.value;render();});
   document.getElementById("calChannel").addEventListener("change",function(){filters.channel=this.value;renderCalendar();});
-  document.getElementById("calType").addEventListener("change",function(){calType=this.value;renderCalendar();});
+  document.getElementById("calTypeBtn").addEventListener("click",function(e){e.stopPropagation();var m=document.getElementById("calTypeMenu");m.hidden=!m.hidden;});
+  document.getElementById("calTypeMenu").addEventListener("click",function(e){e.stopPropagation();});
+  document.getElementById("calTypeMenu").addEventListener("change",function(e){var c=e.target.closest(".calt-chk");if(!c)return;var v=c.value;if(c.checked){if(calTypes.indexOf(v)<0)calTypes.push(v);}else{calTypes=calTypes.filter(function(x){return x!==v;});}renderCalendar();});
   document.getElementById("calPrev").addEventListener("click",function(){calM--;if(calM<0){calM=11;calY--;}renderCalendar();});
   document.getElementById("calNext").addEventListener("click",function(){calM++;if(calM>11){calM=0;calY++;}renderCalendar();});
   document.getElementById("calToday").addEventListener("click",function(){var d=new Date();calY=d.getFullYear();calM=d.getMonth();renderCalendar();});
@@ -1537,7 +1544,7 @@
     else { sort[view]={key:key,dir:1}; }
     render();
   });
-  document.addEventListener("click",function(){closeChanPop();closeOwnerPop();var mm=document.querySelector(".tabmore-menu");if(mm&&!mm.hidden)mm.hidden=true;});
+  document.addEventListener("click",function(){closeChanPop();closeOwnerPop();Array.prototype.forEach.call(document.querySelectorAll(".tabmore-menu"),function(mm){if(!mm.hidden)mm.hidden=true;});});
   document.getElementById("bugBtn").addEventListener("click",function(){document.getElementById("bugOverlay").classList.add("open");renderBugs();setTimeout(function(){document.getElementById("bugText").focus();},40);});
   document.getElementById("bugClose").addEventListener("click",function(){document.getElementById("bugOverlay").classList.remove("open");});
   document.getElementById("bugOverlay").addEventListener("click",function(e){if(e.target===this)this.classList.remove("open");});
