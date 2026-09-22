@@ -172,6 +172,13 @@
   .plink{cursor:pointer}
   .plink:hover{background:var(--surface-2)}
   .popen{color:var(--accent); font-weight:600; font-size:12px}
+  .lnkico,.vi-open,.m-open,.pr-open{display:inline-flex; align-items:center; color:var(--accent); vertical-align:middle; margin-left:5px; flex:none}
+  .lnkico:hover,.vi-open:hover,.m-open:hover,.pr-open:hover{opacity:.75}
+  .c-exp{white-space:nowrap; text-align:center}
+  .mcount{display:inline-block; margin-top:5px; min-width:22px; padding:1px 7px; border:1px solid var(--border-strong); border-radius:20px; background:var(--surface-2); color:var(--ink-2); font-size:11px; font-weight:600; cursor:pointer; text-align:center; font-variant-numeric:tabular-nums}
+  .mcount:hover{border-color:var(--accent); color:var(--accent)}
+  .mcount.zero{color:var(--ink-3); opacity:.65}
+  .recur{display:inline-flex; align-items:center; gap:4px; margin-top:5px; font-size:11px; color:var(--ink-3); cursor:pointer; white-space:nowrap}
   .tabs-cal .tab.active{color:var(--s-violet-fg); border-bottom-color:var(--s-violet-fg)}
   .tabs-cal .tab.active .cnt{background:var(--s-violet-bg); color:var(--s-violet-fg)}
   .tabs-vids .tab.active{color:var(--s-amber-fg); border-bottom-color:var(--s-amber-fg)}
@@ -209,7 +216,7 @@
   textarea.celltxt{font-family:inherit; font-size:13px; padding:7px 9px; border:1px solid var(--border-strong); border-radius:4px; background:var(--surface-2); color:var(--ink); width:100%; min-height:52px; resize:vertical; line-height:1.45}
   textarea.celltxt:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); background:var(--surface)}
   .c-notes textarea.celltxt{min-height:80px}
-  .cellsel{font-family:inherit; font-size:12.5px; padding:6px 24px 6px 8px; border:1px solid transparent; border-radius:4px; background:transparent; color:var(--ink); cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A96AC' stroke-width='2.4'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 6px center}
+  .cellsel{font-family:inherit; font-size:13px; padding:6px 24px 6px 8px; border:1px solid transparent; border-radius:4px; background:transparent; color:var(--ink); cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A96AC' stroke-width='2.4'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 6px center}
   .cellsel:hover{border-color:var(--border)}
   .cellsel:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); background-color:var(--surface)}
   .illinks{display:flex; flex-direction:column; gap:4px; margin-top:6px}
@@ -760,7 +767,7 @@
       if(!p.id)p.id=uid("pr");
       if(p.name===undefined)p.name=String(p.event||"");
       if(p.ptype===undefined)p.ptype=""; if(p.tier===undefined)p.tier=""; if(p.date===undefined)p.date=""; if(p.endDate===undefined)p.endDate="";
-      if(p.country===undefined)p.country=""; if(p.venue===undefined)p.venue=""; if(p.url===undefined)p.url=""; if(p.status===undefined)p.status="Considering"; if(p.owner===undefined)p.owner=""; if(p.notes===undefined)p.notes=""; if(p.organizer===undefined)p.organizer=""; if(p.organizerEmail===undefined)p.organizerEmail="";
+      if(p.country===undefined)p.country=""; if(p.venue===undefined)p.venue=""; if(p.url===undefined)p.url=""; if(p.status===undefined)p.status="Considering"; if(p.owner===undefined)p.owner=""; if(p.notes===undefined)p.notes=""; if(p.organizer===undefined)p.organizer=""; if(p.organizerEmail===undefined)p.organizerEmail=""; if(p.recurring===undefined)p.recurring=false;
       if(!p.added)p.added=p.updated||"—"; if(p.addedBy===undefined)p.addedBy=""; if(p.updatedBy===undefined)p.updatedBy="";
       if(p.country){var qc=CNORM[String(p.country).trim().toLowerCase()]; if(qc)p.country=qc;}
     });
@@ -973,6 +980,7 @@
   // ---- item table ----
   function thItems(){return '<tr>'+sth("items","item","Action item",'width:28%')+sth("items","owner","Owner")+sth("items","status","Status")+sth("items","due","Due")+'<th style="width:26%">Notes &amp; reference link</th><th style="text-align:right">Actions</th></tr>';}
   var LINKSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
+  var EXTLINK='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M14 4h6v6"/><path d="M20 4l-8.5 8.5"/><path d="M18 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h6"/></svg>';
   function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:kind==="event"?events:kind==="partner"?partners:kind==="prospect"?prospects:kind==="etevent"?etEvents:kind==="etlead"?etLeads:mcAll();return arr.filter(function(r){return r.id===id;})[0];}
   function cellIn(kind,id,f,val,ph){return '<input class="cellin" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" value="'+esc(val==null?"":val)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(f==="country"?' list="countryList"':(f==="owner"?' list="ownerList"':''))+'>';}
   function prioSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="priority">'+PRIOS.map(function(p){return '<option'+(p===val?" selected":"")+'>'+esc(p)+'</option>';}).join("")+'</select>';}
@@ -1032,7 +1040,7 @@
         '<td style="width:130px"><select class="vi-status">'+st+'</select></td>'+
         '<td style="width:170px">'+vidDateCell(v)+'</td>'+
         '<td><textarea class="vi-notes celltxt" placeholder="Notes">'+esc(v.notes||"")+'</textarea></td>'+
-        '<td style="min-width:200px"><div class="linkcell"><input class="vi-link" type="url" placeholder="https://…" value="'+esc(v.link||"")+'"><a class="vi-open" href="'+esc(u||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(u?"":"display:none")+'">open</a></div></td>'+
+        '<td style="min-width:200px"><div class="linkcell"><input class="vi-link" type="url" placeholder="https://…" value="'+esc(v.link||"")+'"><a class="vi-open" href="'+esc(u||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(u?"":"display:none")+'" title="Open">'+EXTLINK+'</a></div></td>'+
         '<td style="width:36px"><button class="vidrm icon-btn" title="Remove video" aria-label="Remove video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>'+
       '</tr>';
     }).join("");
@@ -1044,9 +1052,9 @@
     var open=!!expanded[x.id];
     var vc=(x.videos||[]).length;
     var su=safeUrl(x.scriptLink);
-    var scriptCell='<div class="linkcell"><input class="m-script" data-mid="'+esc(x.id)+'" type="url" placeholder="https://…sheet" value="'+esc(x.scriptLink||"")+'"><a class="m-open" href="'+esc(su||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(su?"":"display:none")+'">open</a></div>';
+    var scriptCell='<div class="linkcell"><input class="m-script" data-mid="'+esc(x.id)+'" type="url" placeholder="https://…sheet" value="'+esc(x.scriptLink||"")+'"><a class="m-open" href="'+esc(su||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(su?"":"display:none")+'" title="Open">'+EXTLINK+'</a></div>';
     var du=safeUrl(x.videoLink);
-    var driveCell='<div class="linkcell"><input class="m-drive" data-mid="'+esc(x.id)+'" type="url" placeholder="https://…drive" value="'+esc(x.videoLink||"")+'"><a class="m-open" href="'+esc(du||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(du?"":"display:none")+'">open</a></div>';
+    var driveCell='<div class="linkcell"><input class="m-drive" data-mid="'+esc(x.id)+'" type="url" placeholder="https://…drive" value="'+esc(x.videoLink||"")+'"><a class="m-open" href="'+esc(du||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(du?"":"display:none")+'" title="Open">'+EXTLINK+'</a></div>';
     var main='<tr class="main" data-kind="merch" data-id="'+esc(x.id)+'">'+
       '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle videos"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
       '<td class="c-item"><textarea class="cellin cell-title" data-kind="merch" data-id="'+esc(x.id)+'" data-f="merchant" rows="1" placeholder="'+(view==="content"?"Content name":"Merchant")+'">'+esc(x.merchant||"")+'</textarea>'+metaLine(x,vc?' · '+vc+' item'+(vc>1?"s":""):"")+'</td>'+
@@ -1087,7 +1095,7 @@
       '<td style="width:130px"><select class="vi-status">'+st+'</select></td>'+
       '<td style="width:170px">'+vidDateCell(v)+'</td>'+
       '<td><textarea class="vi-notes celltxt" placeholder="Notes">'+esc(v.notes||"")+'</textarea></td>'+
-      '<td style="min-width:200px"><div class="linkcell"><input class="vi-link" type="url" placeholder="https://…" value="'+esc(v.link||"")+'"><a class="vi-open" href="'+esc(u||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(u?"":"display:none")+'">open</a></div></td>'+
+      '<td style="min-width:200px"><div class="linkcell"><input class="vi-link" type="url" placeholder="https://…" value="'+esc(v.link||"")+'"><a class="vi-open" href="'+esc(u||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(u?"":"display:none")+'" title="Open">'+EXTLINK+'</a></div></td>'+
       '<td class="c-actions"><button class="vidrm icon-btn" title="Remove video" aria-label="Remove video"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td>'+
     '</tr>';
   }
@@ -1195,18 +1203,22 @@
   function ptypeSel(id,val){return '<select class="cellsel" data-kind="prospect" data-id="'+esc(id)+'" data-f="ptype"><option value=""'+(val?"":" selected")+'>—</option>'+PROSPECT_TYPES.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
   function tierSel(id,val){return '<select class="cellsel" data-kind="prospect" data-id="'+esc(id)+'" data-f="tier"><option value=""'+(val?"":" selected")+'>—</option>'+TIERS.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
   function prStatusSel(id,val){return '<select class="cellsel pr-status pst-'+esc((val||"").toLowerCase())+'" data-kind="prospect" data-id="'+esc(id)+'" data-f="status">'+PROSPECT_STATUSES.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
-  function prLinkCell(x){var u=safeUrl(x.url);return '<div class="linkcell"><input class="pr-link" data-id="'+esc(x.id)+'" type="url" placeholder="https://…" value="'+esc(x.url||"")+'"><a class="pr-open" href="'+esc(u||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(u?"":"display:none")+'">open</a></div>';}
-  function prDateCell(x){var d=isValidDate(x.date)?x.date:"";return '<div class="datewrap"><input class="cellin cell-date" type="date" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'"></div>';}
+  function prLinkCell(x){var u=safeUrl(x.url);return '<div class="linkcell"><input class="pr-link" data-id="'+esc(x.id)+'" type="url" placeholder="https://…" value="'+esc(x.url||"")+'"><a class="pr-open" href="'+esc(u||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(u?"":"display:none")+'" title="Open">'+EXTLINK+'</a></div>';}
+  function daySpan(x){ if(x.recurring) return "Recurring"; if(!isValidDate(x.date)) return ""; var s=x.date, e=isValidDate(x.endDate)&&x.endDate>=x.date?x.endDate:x.date; var d1=new Date(s+"T00:00:00"), d2=new Date(e+"T00:00:00"); var n=Math.round((d2-d1)/86400000)+1; return n+" day"+(n>1?"s":""); }
+  function prDateCell(x){var d=isValidDate(x.date)?x.date:"",e=isValidDate(x.endDate)?x.endDate:"";return '<div class="datewrap"><input class="cellin cell-date" type="date" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'" title="Start"></div>'+
+    '<div class="datewrap" style="margin-top:4px"><input class="cellin cell-date" type="date" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="endDate" value="'+e+'" title="End"></div>'+
+    '<label class="recur"><input type="checkbox" class="pr-recur" data-id="'+esc(x.id)+'"'+(x.recurring?" checked":"")+'> recurring</label>';}
   function gcalProspectUrl(x){var p=["action=TEMPLATE","text="+encodeURIComponent(x.name||"Event")];if(isValidDate(x.date))p.push("dates="+ymd(x.date)+"/"+nextYmd(isValidDate(x.endDate)?x.endDate:x.date));var det=[];if(x.notes)det.push(x.notes);if(x.url)det.push(x.url);if(det.length)p.push("details="+encodeURIComponent(det.join("\n\n")));var loc=[x.venue,x.country].filter(Boolean).join(", ");if(loc)p.push("location="+encodeURIComponent(loc));GCAL_GUESTS.forEach(function(g){p.push("add="+encodeURIComponent(g));});return "https://calendar.google.com/calendar/render?"+p.join("&");}
   function leadsForEvent(name){return etLeads.filter(function(l){return (l.event_name||"")===(name||"");});}
-  function thProspects(){return '<tr><th class="c-exp"></th>'+sth("prospects","name","Event",'width:20%')+sth("prospects","ptype","Type")+sth("prospects","tier","Tier")+sth("prospects","date","Date")+sth("prospects","country","Country")+'<th>Organizer</th><th>Organizer email</th><th>Link</th><th style="width:16%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function thProspects(){return '<tr><th class="c-exp"></th>'+sth("prospects","name","Event",'width:19%')+sth("prospects","ptype","Type",'min-width:110px')+sth("prospects","tier","Tier",'width:64px')+sth("prospects","date","Date",'min-width:150px')+sth("prospects","country","Country",'width:80px')+'<th style="min-width:130px">Organizer</th><th style="min-width:150px">Organizer email</th><th style="min-width:130px">Link</th><th style="min-width:200px">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function rowProspect(x){
     var open=!!expanded[x.id];
     var lc=leadsForEvent(x.name).length;
     var range=shortDate(x.date)+((x.endDate&&x.endDate!==x.date)?" – "+shortDate(x.endDate):"");
-    var meta='<div class="meta" title="'+esc(range)+'">'+esc(x.venue||"")+(x.endDate&&x.endDate!==x.date?' · '+esc(range):'')+(lc?' · '+lc+' merchant'+(lc>1?"s":""):'')+'</div>';
+    var span=daySpan(x);
+    var meta='<div class="meta" title="'+esc(range)+'">'+esc(x.venue||"")+(span?(x.venue?' · ':'')+esc(span):'')+'</div>';
     var main='<tr class="main" data-kind="prospect" data-id="'+esc(x.id)+'">'+
-      '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle merchants"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
+      '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle merchants"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button><button class="mcount'+(lc?"":" zero")+'" data-exp="'+esc(x.id)+'" title="'+lc+' matched merchant'+(lc===1?"":"s")+'">'+lc+'</button></td>'+
       '<td class="c-item"><textarea class="cellin cell-title" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="name" rows="1" placeholder="Event name">'+esc(x.name||"")+'</textarea>'+meta+'</td>'+
       '<td>'+ptypeSel(x.id,x.ptype)+'</td>'+
       '<td>'+tierSel(x.id,x.tier)+'</td>'+
@@ -1241,7 +1253,7 @@
   var etSub="overview", etShowPast=false, etLeadFilter="";
   function etTierSel(id,val){return '<select class="cellsel" data-kind="etevent" data-id="'+esc(id)+'" data-f="tier"><option value=""'+(val?"":" selected")+'>—</option>'+TIERS.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
   function etDateCell(id,f,val){return '<div class="datewrap"><input class="cellin cell-date" type="date" data-kind="etevent" data-id="'+esc(id)+'" data-f="'+f+'" value="'+(isValidDate(val)?val:"")+'"></div>';}
-  function etLink(url){var u=safeUrl(url&&/^https?:\/\//i.test(url)?url:(url?("https://"+url):""));return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" class="popen">open ↗</a>':'';}
+  function etLink(url){var u=safeUrl(url&&/^https?:\/\//i.test(url)?url:(url?("https://"+url):""));return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" class="lnkico" title="Open">'+EXTLINK+'</a>':'';}
   function thETEvents(){return '<tr>'+
     '<th style="width:16%">Event</th><th>Category</th><th>Tier</th><th>Start</th><th>End</th><th>Venue</th><th>Organizer</th><th>Organizer email</th><th>Vendor est</th><th>Leads</th><th>Link</th><th style="width:16%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function rowETEvent(x){
@@ -1698,6 +1710,7 @@
     var cs=e.target.closest(".cellsel");if(cs){var rc=findRec(cs);if(rc){rc[cs.getAttribute("data-f")]=cs.value;stamp(rc);saveAll();render();}return;}
     var ss=e.target.closest(".st-sel");if(ss){var r2=findRec(ss);if(r2){r2.status=ss.value;stamp(r2);saveAll();render();}return;}
     var etv=e.target.closest(".et-verify");if(etv){var rv=findRec(etv);if(rv){rv.verify=etv.checked;stamp(rv);saveAll();}return;}
+    var prr=e.target.closest(".pr-recur");if(prr){var pr=prospects.filter(function(z){return z.id===prr.getAttribute("data-id");})[0];if(pr){pr.recurring=prr.checked;stamp(pr);saveAll();render();}return;}
   });
   document.getElementById("rows").addEventListener("input",function(e){
     var ms=e.target.closest(".m-script");if(ms){var mmid=ms.getAttribute("data-mid");var mm=mcById(mmid);if(mm){mm.scriptLink=ms.value;stamp(mm);saveAll();var ma=ms.parentNode.querySelector(".m-open");var mu=safeUrl(ms.value);if(ma){if(mu){ma.href=mu;ma.style.display="";}else{ma.style.display="none";}}}return;}
