@@ -360,8 +360,8 @@
   .m-open:hover{text-decoration:underline}
   .vidrm{color:var(--danger)}
   .vidrm:hover{background:var(--danger-soft); border-color:transparent}
-  .addvidinline,.addtaskinline,.addeventinline{margin-top:12px; font-size:12.5px; border:1px dashed var(--border-strong); background:transparent}
-  .addvidinline:hover,.addtaskinline:hover,.addeventinline:hover{border-color:var(--accent); color:var(--accent)}
+  .addvidinline,.addtaskinline,.addeventinline,.addmerchinline{margin-top:12px; font-size:12.5px; border:1px dashed var(--border-strong); background:transparent}
+  .addvidinline:hover,.addtaskinline:hover,.addeventinline:hover,.addmerchinline:hover{border-color:var(--accent); color:var(--accent)}
 
   .chanpick{display:inline-flex; align-items:center; gap:5px; flex-wrap:wrap; width:100%; min-width:120px; min-height:32px; border:1px solid var(--border-strong); background:var(--surface-2); border-radius:4px; padding:5px 8px; font-size:11px; cursor:pointer; justify-content:flex-start}
   .chanpick:hover{border-color:var(--ink-3)}
@@ -760,7 +760,7 @@
       if(!p.id)p.id=uid("pr");
       if(p.name===undefined)p.name=String(p.event||"");
       if(p.ptype===undefined)p.ptype=""; if(p.tier===undefined)p.tier=""; if(p.date===undefined)p.date=""; if(p.endDate===undefined)p.endDate="";
-      if(p.country===undefined)p.country=""; if(p.venue===undefined)p.venue=""; if(p.url===undefined)p.url=""; if(p.status===undefined)p.status="Considering"; if(p.owner===undefined)p.owner=""; if(p.notes===undefined)p.notes="";
+      if(p.country===undefined)p.country=""; if(p.venue===undefined)p.venue=""; if(p.url===undefined)p.url=""; if(p.status===undefined)p.status="Considering"; if(p.owner===undefined)p.owner=""; if(p.notes===undefined)p.notes=""; if(p.organizer===undefined)p.organizer=""; if(p.organizerEmail===undefined)p.organizerEmail="";
       if(!p.added)p.added=p.updated||"—"; if(p.addedBy===undefined)p.addedBy=""; if(p.updatedBy===undefined)p.updatedBy="";
       if(p.country){var qc=CNORM[String(p.country).trim().toLowerCase()]; if(qc)p.country=qc;}
     });
@@ -776,6 +776,14 @@
       if(l.verify===undefined)l.verify=false;
       if(!l.added)l.added=l.updated||"—"; if(l.addedBy===undefined)l.addedBy=""; if(l.updatedBy===undefined)l.updatedBy="";
     });
+  }
+  function enrichProspectsFromET(){
+    try{ if(localStorage.getItem("prospects_enriched_v1")) return; }catch(e){}
+    function nk(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");}
+    var byName={}; prospects.forEach(function(p){byName[nk(p.name)]=p;});
+    etEvents.forEach(function(e){var p=byName[nk(e.name)]; if(p){ if(!p.organizer&&e.organizer)p.organizer=e.organizer; if(!p.organizerEmail&&e.organizer_email)p.organizerEmail=e.organizer_email; }});
+    try{localStorage.setItem("prospects_enriched_v1","1");}catch(e){}
+    saveAll();
   }
   function importEventTracker(){
     try{ if(localStorage.getItem("ettracker_seeded_v1")) return false; }catch(e){}
@@ -869,7 +877,7 @@
     var el=document.getElementById("tabs"); el.innerHTML="";
     var clsMap={items:"tabs-items",content:"tabs-content",events:"tabs-events",partners:"tabs-partners",prospects:"tabs-prospects",ettrack:"tabs-ettrack",report:"tabs-report",cal:"tabs-cal",vids:"tabs-vids"};
     el.className="tabs "+(clsMap[view]||"tabs-cal");
-    var primary=[{k:"partners",l:"Projects",n:partners.length},{k:"content",l:"Content",n:content.length},{k:"events",l:"Events",n:events.length},{k:"prospects",l:"Prospects",n:prospects.length},{k:"ettrack",l:"Event Tracker",n:etEvents.length},{k:"cal",l:"Calendar",n:scheduledCount()},{k:"items",l:"Action items",n:items.length}];
+    var primary=[{k:"cal",l:"Calendar",n:scheduledCount()},{k:"partners",l:"Projects",n:partners.length},{k:"content",l:"Content",n:content.length},{k:"events",l:"Events",n:events.length},{k:"prospects",l:"Prospects",n:prospects.length},{k:"items",l:"Action items",n:items.length}];
     var more=[{k:"vids",l:"All videos",n:scheduledCount(true)},{k:"report",l:"Analytics",n:null}];
     function tabBtn(t){var b=document.createElement("button");b.className="tab"+(view===t.k?" active":"");b.setAttribute("role","tab");b.setAttribute("aria-selected",view===t.k?"true":"false");b.innerHTML=esc(t.l)+(t.n===null?'':' <span class="cnt">'+t.n+'</span>');b.addEventListener("click",function(){switchView(t.k);});return b;}
     primary.forEach(function(t){el.appendChild(tabBtn(t));});
@@ -1190,21 +1198,33 @@
   function prLinkCell(x){var u=safeUrl(x.url);return '<div class="linkcell"><input class="pr-link" data-id="'+esc(x.id)+'" type="url" placeholder="https://…" value="'+esc(x.url||"")+'"><a class="pr-open" href="'+esc(u||"#")+'" target="_blank" rel="noopener noreferrer" style="'+(u?"":"display:none")+'">open</a></div>';}
   function prDateCell(x){var d=isValidDate(x.date)?x.date:"";return '<div class="datewrap"><input class="cellin cell-date" type="date" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'"></div>';}
   function gcalProspectUrl(x){var p=["action=TEMPLATE","text="+encodeURIComponent(x.name||"Event")];if(isValidDate(x.date))p.push("dates="+ymd(x.date)+"/"+nextYmd(isValidDate(x.endDate)?x.endDate:x.date));var det=[];if(x.notes)det.push(x.notes);if(x.url)det.push(x.url);if(det.length)p.push("details="+encodeURIComponent(det.join("\n\n")));var loc=[x.venue,x.country].filter(Boolean).join(", ");if(loc)p.push("location="+encodeURIComponent(loc));GCAL_GUESTS.forEach(function(g){p.push("add="+encodeURIComponent(g));});return "https://calendar.google.com/calendar/render?"+p.join("&");}
-  function thProspects(){return '<tr>'+sth("prospects","name","Event",'width:24%')+sth("prospects","ptype","Type")+sth("prospects","tier","Tier")+sth("prospects","date","Date")+sth("prospects","country","Country")+'<th>Link</th><th style="width:22%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function leadsForEvent(name){return etLeads.filter(function(l){return (l.event_name||"")===(name||"");});}
+  function thProspects(){return '<tr><th class="c-exp"></th>'+sth("prospects","name","Event",'width:20%')+sth("prospects","ptype","Type")+sth("prospects","tier","Tier")+sth("prospects","date","Date")+sth("prospects","country","Country")+'<th>Organizer</th><th>Organizer email</th><th>Link</th><th style="width:16%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function rowProspect(x){
+    var open=!!expanded[x.id];
+    var lc=leadsForEvent(x.name).length;
     var range=shortDate(x.date)+((x.endDate&&x.endDate!==x.date)?" – "+shortDate(x.endDate):"");
-    return '<tr class="main" data-kind="prospect" data-id="'+esc(x.id)+'">'+
-      '<td class="c-item"><textarea class="cellin cell-title" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="name" rows="1" placeholder="Event name">'+esc(x.name||"")+'</textarea><div class="meta" title="'+esc(range)+'">'+esc(x.venue||"")+(x.endDate&&x.endDate!==x.date?' · '+esc(range):'')+'</div></td>'+
+    var meta='<div class="meta" title="'+esc(range)+'">'+esc(x.venue||"")+(x.endDate&&x.endDate!==x.date?' · '+esc(range):'')+(lc?' · '+lc+' merchant'+(lc>1?"s":""):'')+'</div>';
+    var main='<tr class="main" data-kind="prospect" data-id="'+esc(x.id)+'">'+
+      '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle merchants"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
+      '<td class="c-item"><textarea class="cellin cell-title" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="name" rows="1" placeholder="Event name">'+esc(x.name||"")+'</textarea>'+meta+'</td>'+
       '<td>'+ptypeSel(x.id,x.ptype)+'</td>'+
       '<td>'+tierSel(x.id,x.tier)+'</td>'+
       '<td>'+prDateCell(x)+'</td>'+
       '<td>'+cellIn("prospect",x.id,"country",x.country,"Country")+'</td>'+
+      '<td>'+cellIn("prospect",x.id,"organizer",x.organizer,"Organizer")+'</td>'+
+      '<td>'+cellIn("prospect",x.id,"organizerEmail",x.organizerEmail,"email")+'</td>'+
       '<td style="min-width:150px">'+prLinkCell(x)+'</td>'+
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="prospect" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
       '<td class="c-actions"><button class="icon-btn" data-prconv="'+esc(x.id)+'" title="Convert to Event" aria-label="Convert to Event"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:15px;height:15px"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button><button class="icon-btn gcalbtn" data-prgcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-prdel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
+    var leads=leadsForEvent(x.name);
+    var lbody=leads.map(rowETLead).join("")||'<tr><td colspan="10" class="novids">No matched HitPay merchants yet — add one below.</td></tr>';
+    var sub= open? '<tr class="subrow"><td colspan="11"><div class="subwrap"><div class="subhead">Matched HitPay merchants'+(lc?' · '+lc:'')+'</div><div class="tablescroll"><table class="vids etleadtbl"><thead>'+thETLeads()+'</thead><tbody>'+lbody+'</tbody></table></div><button class="addmerchinline" data-etladd="'+esc(x.name||"")+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add merchant</button></div></td></tr>' : '';
+    return main+sub;
   }
-  function newProspect(){var p={id:uid("pr"),name:"",ptype:"",tier:"",date:"",endDate:"",country:"",venue:"",url:"",status:"Considering",owner:"",notes:"",added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};prospects.unshift(p);saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="prospect"][data-id="'+p.id+'"]');if(ta)ta.focus();},50);}
+  function newProspect(){var p={id:uid("pr"),name:"",ptype:"",tier:"",date:"",endDate:"",country:"",venue:"",url:"",status:"Considering",owner:"",notes:"",organizer:"",organizerEmail:"",added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};prospects.unshift(p);saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="prospect"][data-id="'+p.id+'"]');if(ta)ta.focus();},50);}
+  function addMerchantForEvent(name){var l={id:uid("etl"),event_name:name||"",brand:"",hitpay_account:"",category:"",email:"",phone:"",link:"",market:"SG",verify:false,added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};etLeads.unshift(l);saveAll();render();setTimeout(function(){var t=document.querySelector('#rows textarea.cell-title[data-kind="etlead"][data-id="'+l.id+'"]');if(t)t.focus();},50);}
   function delProspect(id){var x=prospects.filter(function(p){return p.id===id;})[0];if(!x)return;askConfirm("Delete this prospect?",'"'+(x.name||"Untitled")+'"',function(){prospects=prospects.filter(function(p){return p.id!==id;});saveAll();refreshOptions();render();toast("Prospect deleted");},{danger:true,okLabel:"Delete"});}
   function convertToEvent(id){var p=prospects.filter(function(z){return z.id===id;})[0];if(!p)return;
     askConfirm("Convert to a confirmed Event?",'"'+(p.name||"Untitled")+'" moves from Prospects into Events.',function(){
@@ -1660,6 +1680,7 @@
     var prd=e.target.closest("[data-prdel]");if(prd){delProspect(prd.getAttribute("data-prdel"));return;}
     var eted=e.target.closest("[data-etedel]");if(eted){delETEvent(eted.getAttribute("data-etedel"));return;}
     var etld=e.target.closest("[data-etldel]");if(etld){delETLead(etld.getAttribute("data-etldel"));return;}
+    var etadd=e.target.closest("[data-etladd]");if(etadd){addMerchantForEvent(etadd.getAttribute("data-etladd"));return;}
     var prg=e.target.closest("[data-prgcal]");if(prg){var pe=prospects.filter(function(z){return z.id===prg.getAttribute("data-prgcal");})[0];if(pe){if(!(pe.name||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalProspectUrl(pe),"_blank","noopener");}return;}
     var aei=e.target.closest(".addeventinline");if(aei){newEvent(aei.getAttribute("data-pid"));return;}
     var eo=e.target.closest("[data-eopen]");if(eo){var eoid=eo.getAttribute("data-eopen");view="events";filters={q:"",status:"",prio:"",country:"",owner:"",channel:""};expanded[eoid]=true;["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});render();setTimeout(function(){var b=document.querySelector('[data-exp="'+eoid+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);return;}
@@ -1772,7 +1793,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
