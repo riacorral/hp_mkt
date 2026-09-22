@@ -148,6 +148,15 @@
   .tabmore-item{display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:transparent; border:0; padding:9px 11px; border-radius:7px; font:inherit; font-size:14px; color:var(--ink); cursor:pointer; white-space:nowrap}
   .tabmore-item:hover{background:var(--surface-2)}
   .tabmore-item.active{color:var(--accent); font-weight:600}
+  .card.view-ettrack{border-top-color:var(--s-teal-fg)}
+  .card.view-ettrack thead th{background:var(--s-teal-bg)}
+  .tabs-ettrack .tab.active{color:var(--s-teal-fg); border-bottom-color:var(--s-teal-fg)}
+  .tabs-ettrack .tab.active .cnt{background:var(--s-teal-bg); color:var(--s-teal-fg)}
+  .etcontrols{display:flex; align-items:center; gap:10px}
+  .etseg{display:inline-flex; border:1px solid var(--border-strong); border-radius:8px; overflow:hidden}
+  .etseg .etsub{background:transparent; border:0; padding:7px 13px; font:inherit; font-size:13px; color:var(--ink-2); cursor:pointer}
+  .etseg .etsub.on{background:var(--s-teal-bg); color:var(--s-teal-fg); font-weight:600}
+  .etpast{display:inline-flex; align-items:center; gap:6px; font-size:13px; color:var(--ink-2); cursor:pointer}
   .card.view-prospects{border-top-color:var(--s-amber-fg)}
   .card.view-prospects thead th{background:var(--s-amber-bg)}
   .tabs-prospects .tab.active{color:var(--s-amber-fg); border-bottom-color:var(--s-amber-fg)}
@@ -498,6 +507,7 @@
     <select class="filter" id="fChannel" style="display:none"><option value="">All channels</option></select>
     <select class="filter" id="fType" style="display:none"><option value="">All types</option></select>
     <button class="ghost" id="clearBtn" style="display:none">Clear filters</button>
+    <div class="etcontrols" id="etControls" style="display:none"></div>
   </div>
 
   <div class="card" id="tableCard">
@@ -633,6 +643,8 @@
   var PRIOS=["High","Medium","Low"];
   var CTYPES=["Merchant","Brand","Partnership","Merchant Shoot"];
   var EVENT_TYPES=["Demo Night","Workshop","Webinar","Task","Shoot","Expo","Partnership","Other"];
+  var SEED_ETEVENTS=[{"name":"HomeFest 2026 (Round 2)","category":"market","tier":"T1","date_start":"2026-09-18","date_end":"2026-09-20","venue":"Suntec Hall 405","organizer":"IDLah / Reno Fiesta","organizer_email":null,"organizer_url":"homefest.com.sg","vendor_count_est":"300+","hitpay_leads_count":0,"notes":"Home reno / lifestyle brands"},{"name":"Common Rare Singapore 2026","category":"bazaar","tier":"T1","date_start":"2026-09-18","date_end":"2026-09-20","venue":"Suntec Convention Hall 401-402","organizer":"Common Rare Market","organizer_email":"hello@common-rare.com","organizer_url":"common-rare.com","vendor_count_est":"200+","hitpay_leads_count":35,"notes":"Streething is a collaborator (curates ~20 brands), NOT the organizer. 35 HitPay merchants matched (31 SG + 4 MY)."},{"name":"Hitcheed Wedding Wonderland x Bridal Market","category":"bazaar","tier":"T1","date_start":"2026-09-19","date_end":"2026-09-20","venue":"Suntec Hall 403","organizer":"Hitcheed","organizer_email":null,"organizer_url":"hitcheed.com","vendor_count_est":"70+","hitpay_leads_count":0,"notes":""},{"name":"Not Another Pet Fair","category":"market","tier":"T1","date_start":"2026-09-19","date_end":"2026-09-20","venue":"Suntec Hall 404","organizer":"uncertain","organizer_email":null,"organizer_url":"eventbrite.sg/e/not-another-pet-fair-sep26-rsvp-registration-tickets-1991676923292","vendor_count_est":"","hitpay_leads_count":0,"notes":"Organizer not confirmed"},{"name":"Makers' Market @ PLQ Plaza - September","category":"bazaar","tier":"T1","date_start":"2026-09-25","date_end":"2026-09-27","venue":"PLQ Plaza","organizer":"INVADE","organizer_email":"spaces@invade.co","organizer_url":"invade.co","vendor_count_est":"","hitpay_leads_count":0,"notes":"Vendor list not public; email is Cloudflare-obfuscated on invade.co footer — confirm before outreach"},{"name":"Fiesta Botanica","category":"market","tier":"T1","date_start":"2026-09-25","date_end":"2026-09-27","venue":"Suntec Level 3 Concourse","organizer":"Ascent Projects","organizer_email":null,"organizer_url":"","vendor_count_est":"59","hitpay_leads_count":2,"notes":"Organizer via social (IG @ascentprojects); no formal site/email found. 2 HitPay merchants matched."},{"name":"Artcade Singapore 2026","category":"market","tier":"T1","date_start":"2026-09-26","date_end":"2026-09-27","venue":"Suntec Hall 404","organizer":"Artcade SG","organizer_email":null,"organizer_url":"artcade.carrd.co","vendor_count_est":"100+","hitpay_leads_count":0,"notes":"Partnership email on page is obfuscated"},{"name":"The Smart Home Tech Show 2026","category":"trade_show","tier":"T1","date_start":"2026-10-01","date_end":"2026-10-04","venue":"Suntec Halls 401-404","organizer":"Hossey Events","organizer_email":"sales@hosseyevents.com","organizer_url":"smarthometechshow.com.sg","vendor_count_est":"","hitpay_leads_count":0,"notes":"Email seen on smarthometechshow.com.sg/about-us"},{"name":"Eldex Asia 2026","category":"trade_show","tier":"T2","date_start":"2026-10-02","date_end":"2026-10-04","venue":"Suntec Singapore","organizer":"Fireworks Muziyi Media","organizer_email":"info@eldexasia.com","organizer_url":"eldexasia.com","vendor_count_est":"","hitpay_leads_count":0,"notes":"Also joseph@eldexasia.com, hweecheng@eldexasia.com"},{"name":"Diwali Bazaar October 2026","category":"bazaar","tier":"T1","date_start":"2026-10-16","date_end":"2026-10-16","venue":"Suntec Singapore","organizer":"uncertain","organizer_email":null,"organizer_url":"","vendor_count_est":"","hitpay_leads_count":0,"notes":"Organizer not found; confirm full dates closer to event"},{"name":"ITB Asia 2026","category":"trade_show","tier":"T2","date_start":"2026-10-21","date_end":"2026-10-23","venue":"Marina Bay Sands","organizer":"Messe Berlin Asia Pacific","organizer_email":null,"organizer_url":"itb-asia.com","vendor_count_est":"","hitpay_leads_count":0,"notes":"Contact form only"},{"name":"Singapore International Agri-Food Week 2026","category":"trade_show","tier":"T2","date_start":"2026-10-26","date_end":"2026-10-29","venue":"Suntec Singapore","organizer":"SFA / Constellar","organizer_email":"info@sginternationalagrifoodweek.com.sg","organizer_url":"sginternationalagrifoodweek.com.sg","vendor_count_est":"","hitpay_leads_count":0,"notes":"SFA + Temasek; organizing partner Constellar"},{"name":"Asia Pacific Food Expo (APFE) 2026","category":"trade_show","tier":"T1","date_start":"2026-11-06","date_end":"2026-11-09","venue":"Singapore EXPO Hall 4","organizer":"SFMA","organizer_email":"enquiries@sfma.org.sg","organizer_url":"asiapacificfoodexpo.org.sg","vendor_count_est":"100+","hitpay_leads_count":0,"notes":"Singapore Food Manufacturers' Association"},{"name":"Christmas Galore 2026","category":"market","tier":"T2","date_start":"2026-11-07","date_end":"2026-11-08","venue":"Ubi Road 1","organizer":"uncertain (June Tew)","organizer_email":null,"organizer_url":"eventbrite.sg/e/christmas-galore-2026-tickets-1989824635048","vendor_count_est":"","hitpay_leads_count":0,"notes":"Self-published on Eventbrite"},{"name":"Singapore Fintech Festival 2026","category":"convention","tier":"T2","date_start":"2026-11-18","date_end":"2026-11-20","venue":"Singapore EXPO","organizer":"MAS / GFTN","organizer_email":null,"organizer_url":"fintechfestival.sg","vendor_count_est":"600+","hitpay_leads_count":0,"notes":"Mostly B2B; low in-person retail ICP"},{"name":"Boutiques Singapore - The Gifting Edition 2026","category":"bazaar","tier":"T1","date_start":"2026-11-20","date_end":"2026-11-22","venue":"F1 Pit Building","organizer":"Boutique Fairs","organizer_email":null,"organizer_url":"boutiquefairs.com.sg","vendor_count_est":"300+","hitpay_leads_count":0,"notes":"Top priority for Q4 SG; contact form only"},{"name":"Christmas Together @ Marina Bay Sands","category":"market","tier":"T2","date_start":"2026-11-26","date_end":"2026-11-29","venue":"Marina Bay Sands","organizer":"Oceanus Media (best-guess)","organizer_email":null,"organizer_url":"togetherland.world","vendor_count_est":"","hitpay_leads_count":0,"notes":"Organizer best-guess; confirm 2026 listing"},{"name":"EOY Music, Comics & Arts Festival 2026","category":"convention","tier":"T1","date_start":"2026-12-25","date_end":"2026-12-26","venue":"Suntec Hall 405","organizer":"Events of the Year","organizer_email":"tim@theeoy.com","organizer_url":"theeoy.com/eoy","vendor_count_est":"","hitpay_leads_count":0,"notes":"Recent editions moved to Raffles City Convention Centre"}];
+  var SEED_ETLEADS=[{"event_name":"Common Rare Singapore 2026","brand":"3EIGHTH","hitpay_account":"3EIGHTH Pte. Ltd.","category":"Special Collabs","email":"enquiry@3eighth.co","phone":"+65 8768 8577","link":"3eighth.co","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Under the Sun","hitpay_account":"Under The Sun","category":"Special Collabs","email":"hello.underthesun@gmail.com","phone":"+65 9857 7227","link":"underthesunsg.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Pass It On","hitpay_account":"Pass It On Elab Pte Ltd","category":"Special Collabs","email":"michelle@pass-it-on.co","phone":"+65 8118 8204","link":"pass-it-on.co","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Hands On Film","hitpay_account":"Hands On Film","category":"Special Collabs","email":"film@handsoncollective.co","phone":"+65 9021 7297","link":"instagram.com/handsonfilm","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Soft Spot","hitpay_account":"Soft Spot Pte Ltd","category":"Lifestyle","email":"lauren@softspot.baby","phone":"+65 9222 1192","link":"softspot.baby","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Olive Basics","hitpay_account":"Olive Basics","category":"Lifestyle","email":"gillian@olivebasics.com","phone":"+65 9436 9437","link":"olivebasics.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"KARANGAN","hitpay_account":"karangan","category":"Lifestyle","email":"ibujarigemini@gmail.com","phone":"+65 8160 4051","link":"karangan.co","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Tell Your Children","hitpay_account":"TYC Studios Pte Ltd","category":"Lifestyle","email":"kevin@tycstudios.com","phone":"+65 9221 3498","link":"tellyourchildren.world","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Officially Drenched","hitpay_account":"Officially Drenched","category":"Lifestyle","email":"officiallydrenched@gmail.com","phone":"+65 9626 8854","link":"officiallydrenched.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Kinu Supply","hitpay_account":"Kinu Supply","category":"Lifestyle","email":"hello@kinu.supply","phone":"+65 8768 9223","link":"kinu.supply","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Wacky Wears","hitpay_account":"Wacky Wears","category":"Lifestyle","email":"wacky.wears@gmail.com","phone":"+65 8833 7487","link":"wackywears.co","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Talking Toes","hitpay_account":"Talking Toes Pte Ltd","category":"Lifestyle","email":"admin@talkingtoessocks.com","phone":"+65 9101 3697","link":"talkingtoessocks.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Gentle Giants Club","hitpay_account":"Gentle Giants Club LLP","category":"Lifestyle","email":"gentlegiants.club@gmail.com","phone":"+65 8493 3255","link":"gentlegiantsclub.cococart.co","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Mittsu Doru","hitpay_account":"Mittsu Doru","category":"Lifestyle","email":"kahyan@mittsudoru.com","phone":"+65 8862 4568","link":"mittsudoru.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"SCENT JOURNER","hitpay_account":"Scent Journer Pte Ltd","category":"Lifestyle","email":"alex.lim@scentjourner.com","phone":"+65 9023 8749","link":"scentjourner.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"stillgoods","hitpay_account":"stillgoods","category":"Lifestyle","email":"hello@shopstillgoods.com","phone":"+65 9616 0288","link":"shopstillgoods.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Indoor Outdoor","hitpay_account":"Indoor Outdoor Industries Pte. Ltd.","category":"Lifestyle","email":"contact@theindooroutdoor.com","phone":"+65 9771 3206","link":"theindooroutdoor.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"TANCHEN STUDIO","hitpay_account":"TANCHEN Studio","category":"Lifestyle","email":"sanchia@tanchenstudio.com","phone":"+65 9326 6131","link":"tanchenstudio.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Epilogue Fragrances","hitpay_account":"Epilogue Fragrances LLP","category":"Lifestyle","email":"joshua.foong@epilogue.sg","phone":"+65 9387 3931","link":"epilogue.sg","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"hues","hitpay_account":"hues","category":"Lifestyle","email":"hues.studio.co@gmail.com","phone":"+65 8493 4368","link":"huesstudio.co","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"TOTTO&CO.","hitpay_account":"TOTTO&CO.","category":"Lifestyle","email":"admin@tottoandco.com","phone":"+65 9023 7038","link":"tottoandco.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Soul Good Project","hitpay_account":"Soul Good Project LLP","category":"Lifestyle","email":"hello@soulgoodproject.com","phone":"+65 8949 6803","link":"","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"SUKOON","hitpay_account":"SUKOON","category":"Lifestyle","email":"ashleyzhou@sukoondays.com","phone":"+65 8809 8538","link":"sukoondays.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Good Mess","hitpay_account":"Good Mess","category":"Lifestyle","email":"hello@shopgoodmess.com","phone":"+65 9780 3713","link":"shopgoodmess.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"SANJE","hitpay_account":"Sanje Wear Pte. Ltd.","category":"Lifestyle","email":"ayuviona11@gmail.com","phone":"+62 877 8185 3533","link":"sanjewear.com","market":"SG","verify":true},{"event_name":"Common Rare Singapore 2026","brand":"POINTLINE","hitpay_account":"Pointline Holdings Pte Ltd","category":"Lifestyle","email":"lichhoan@u.nus.edu","phone":"+65 9625 9369","link":"pointlinejewelry.com","market":"SG","verify":true},{"event_name":"Common Rare Singapore 2026","brand":"rehyphen","hitpay_account":"rehyphen","category":"Indie Print","email":"jjchuanyx@rehyphen.org","phone":"+65 9277 3668","link":"rehyphen.org","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Raw Market Shop","hitpay_account":"Raw Market Shop","category":"Indie Print","email":"rawmarketshop@gmail.com","phone":"+65 9850 0358","link":"rawmarketshop.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Homeground Coffee Roasters","hitpay_account":"Homeground Coffee Roasters","category":"F&B","email":"ecom@hgcrs.com","phone":"+65 8218 4285","link":"homegroundcoffeeroasters.com","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Khao","hitpay_account":"Lotus Group Global Pte. Ltd.","category":"F&B","email":"hello@khao.sg","phone":"+65 9654 8965","link":"khao.sg","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"Omollomo","hitpay_account":"Revive Snacks Pte. Ltd.","category":"F&B","email":"orders@omollomo.com","phone":"+65 9029 1224","link":"revivesnacks.com.sg","market":"SG","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"SHAOFEN","hitpay_account":"Shao Fen Designs","category":"Special Collabs","email":"info@shao-fen.net","phone":"+60 12-271 0505","link":"shao-fen.net","market":"MY","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"THE WES STUDIO","hitpay_account":"The Wes Studio PLT","category":"Special Collabs","email":"han@thewesstudio.com","phone":"+60 12-423 7299","link":"thewesstudio.com","market":"MY","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"ANAABU","hitpay_account":"Anaabu Studio Sdn Bhd","category":"Special Collabs","email":"sale@anaabu.co","phone":"+60 17-307 0350","link":"anaabu.co","market":"MY","verify":false},{"event_name":"Common Rare Singapore 2026","brand":"FIGURA","hitpay_account":"Figura","category":"Lifestyle","email":"werk.badikha@gmail.com","phone":"+60 11-3734 5732","link":"","market":"MY","verify":true},{"event_name":"Fiesta Botanica","brand":"W.O. Wan Orchids","hitpay_account":"W.O. Wan Orchids","category":"Plants","email":"wan.orchid89@gmail.com","phone":"+65 8669 1901","link":"","market":"SG","verify":false},{"event_name":"Fiesta Botanica","brand":"Singapore Carnivorous Plant","hitpay_account":"Singapore Carnivorous Plants Pte Ltd","category":"Plants","email":"sgcarnivorousplants@gmail.com","phone":"+65 9800 4131","link":"","market":"SG","verify":false}];
   var PROSPECT_TYPES=["Pop-up","Bazaar","Market","Expo","Convention","Talk","Other"];
   var PROSPECT_STATUSES=["Considering","Going","Maybe","Declined"];
   var TIERS=["T1","T2","T3"];
@@ -706,7 +718,7 @@
     }
   }
 
-  var items=[], merch=[], events=[], partners=[], content=[], prospects=[];
+  var items=[], merch=[], events=[], partners=[], content=[], prospects=[], etEvents=[], etLeads=[];
   var API="/api/data";
   var serverRev=-1, saveTimer=null, lastMutation=0, lastSync=0, syncTimer=null;
   function updateSyncLabel(){var el=document.getElementById("syncLabel");if(!el)return;if(!lastSync){el.textContent="connecting…";return;}var s=Math.round((Date.now()-lastSync)/1000);el.textContent=s<3?"synced just now":s<60?("synced "+s+"s ago"):("synced "+Math.round(s/60)+"m ago");}
@@ -714,7 +726,7 @@
     var it=seedItems(), mr=seedMerch();
     ADD_MERCH_A11.slice().reverse().forEach(function(m){mr.unshift(JSON.parse(JSON.stringify(m)));});
     ADD_ITEMS_A11.slice().reverse().forEach(function(i){it.unshift(JSON.parse(JSON.stringify(i)));});
-    return {items:it, merch:mr, bugs:[], events:[], partners:[], content:[], prospects:[]};
+    return {items:it, merch:mr, bugs:[], events:[], partners:[], content:[], prospects:[], etEvents:[], etLeads:[]};
   }
   function normalizeState(){
     // Merged Merchant into Content: migrate any legacy merch records over (tagged Merchant).
@@ -752,6 +764,26 @@
       if(!p.added)p.added=p.updated||"—"; if(p.addedBy===undefined)p.addedBy=""; if(p.updatedBy===undefined)p.updatedBy="";
       if(p.country){var qc=CNORM[String(p.country).trim().toLowerCase()]; if(qc)p.country=qc;}
     });
+    etEvents.forEach(function(e){
+      if(!e.id)e.id=uid("ete");
+      ["name","category","tier","date_start","date_end","venue","organizer","organizer_email","organizer_url","vendor_count_est","notes"].forEach(function(f){if(e[f]===undefined||e[f]===null)e[f]="";});
+      if(e.hitpay_leads_count===undefined)e.hitpay_leads_count=0; if(e.status===undefined)e.status="active";
+      if(!e.added)e.added=e.updated||"—"; if(e.addedBy===undefined)e.addedBy=""; if(e.updatedBy===undefined)e.updatedBy="";
+    });
+    etLeads.forEach(function(l){
+      if(!l.id)l.id=uid("etl");
+      ["event_name","brand","hitpay_account","category","email","phone","link","market"].forEach(function(f){if(l[f]===undefined||l[f]===null)l[f]="";});
+      if(l.verify===undefined)l.verify=false;
+      if(!l.added)l.added=l.updated||"—"; if(l.addedBy===undefined)l.addedBy=""; if(l.updatedBy===undefined)l.updatedBy="";
+    });
+  }
+  function importEventTracker(){
+    try{ if(localStorage.getItem("ettracker_seeded_v1")) return false; }catch(e){}
+    if(etEvents.length||etLeads.length){ try{localStorage.setItem("ettracker_seeded_v1","1");}catch(e){} return false; }
+    SEED_ETEVENTS.forEach(function(r){ var o=JSON.parse(JSON.stringify(r)); o.id=uid("ete"); o.added=today(); o.updated=today(); o.addedBy="Event Hunter"; o.updatedBy="Event Hunter"; etEvents.push(o); });
+    SEED_ETLEADS.forEach(function(r){ var o=JSON.parse(JSON.stringify(r)); o.id=uid("etl"); o.added=today(); o.updated=today(); o.addedBy="Event Hunter"; o.updatedBy="Event Hunter"; etLeads.push(o); });
+    try{localStorage.setItem("ettracker_seeded_v1","1");}catch(e){}
+    normalizeState(); saveNow(); return true;
   }
   function importProspects(){
     try{ if(localStorage.getItem("prospects_seeded_v1")) return false; }catch(e){}
@@ -760,7 +792,7 @@
     try{localStorage.setItem("prospects_seeded_v1","1");}catch(e){}
     normalizeState(); saveNow(); return true;
   }
-  function applyServer(st){ items=Array.isArray(st.items)?st.items:[]; merch=Array.isArray(st.merch)?st.merch:[]; bugs=Array.isArray(st.bugs)?st.bugs:[]; events=Array.isArray(st.events)?st.events:[]; partners=Array.isArray(st.partners)?st.partners:[]; content=Array.isArray(st.content)?st.content:[]; prospects=Array.isArray(st.prospects)?st.prospects:[]; if(typeof st.rev==="number")serverRev=st.rev; normalizeState(); }
+  function applyServer(st){ items=Array.isArray(st.items)?st.items:[]; merch=Array.isArray(st.merch)?st.merch:[]; bugs=Array.isArray(st.bugs)?st.bugs:[]; events=Array.isArray(st.events)?st.events:[]; partners=Array.isArray(st.partners)?st.partners:[]; content=Array.isArray(st.content)?st.content:[]; prospects=Array.isArray(st.prospects)?st.prospects:[]; etEvents=Array.isArray(st.etEvents)?st.etEvents:[]; etLeads=Array.isArray(st.etLeads)?st.etLeads:[]; if(typeof st.rev==="number")serverRev=st.rev; normalizeState(); }
   function loadAll(done){
     fetch(API,{cache:"no-store"}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(st){
       if(st===null) return;
@@ -772,7 +804,7 @@
   }
   function saveNow(){
     lastMutation=Date.now();
-    return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items,merch:merch,bugs:bugs,events:events,partners:partners,content:content,prospects:prospects})}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(res){ if(res){ lastSync=Date.now(); if(typeof res.rev==="number")serverRev=res.rev; } }).catch(function(){ toast("Save failed — check your connection.",true); });
+    return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items,merch:merch,bugs:bugs,events:events,partners:partners,content:content,prospects:prospects,etEvents:etEvents,etLeads:etLeads})}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(res){ if(res){ lastSync=Date.now(); if(typeof res.rev==="number")serverRev=res.rev; } }).catch(function(){ toast("Save failed — check your connection.",true); });
   }
   function saveAll(){ lastMutation=Date.now(); if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(function(){saveTimer=null;saveNow();},350); }
   function isBusyUI(){ if(document.querySelector(".overlay.open"))return true; if(document.querySelector(".chanpop.open"))return true; var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return true; return saveTimer!==null; }
@@ -835,9 +867,9 @@
   function switchView(k){ if(view!==k){ view=k; filters={q:"",status:defaultStatus(k),prio:"",country:"",owner:"",channel:"",xtype:""}; ["search","fPrio","fCountry","fOwner","fChannel","fType"].forEach(function(idv){var e=document.getElementById(idv);if(e)e.value="";}); render(); } }
   function renderTabs(){
     var el=document.getElementById("tabs"); el.innerHTML="";
-    var clsMap={items:"tabs-items",content:"tabs-content",events:"tabs-events",partners:"tabs-partners",prospects:"tabs-prospects",report:"tabs-report",cal:"tabs-cal",vids:"tabs-vids"};
+    var clsMap={items:"tabs-items",content:"tabs-content",events:"tabs-events",partners:"tabs-partners",prospects:"tabs-prospects",ettrack:"tabs-ettrack",report:"tabs-report",cal:"tabs-cal",vids:"tabs-vids"};
     el.className="tabs "+(clsMap[view]||"tabs-cal");
-    var primary=[{k:"partners",l:"Projects",n:partners.length},{k:"content",l:"Content",n:content.length},{k:"events",l:"Events",n:events.length},{k:"prospects",l:"Prospects",n:prospects.length},{k:"cal",l:"Calendar",n:scheduledCount()},{k:"items",l:"Action items",n:items.length}];
+    var primary=[{k:"partners",l:"Projects",n:partners.length},{k:"content",l:"Content",n:content.length},{k:"events",l:"Events",n:events.length},{k:"prospects",l:"Prospects",n:prospects.length},{k:"ettrack",l:"Event Tracker",n:etEvents.length},{k:"cal",l:"Calendar",n:scheduledCount()},{k:"items",l:"Action items",n:items.length}];
     var more=[{k:"vids",l:"All videos",n:scheduledCount(true)},{k:"report",l:"Analytics",n:null}];
     function tabBtn(t){var b=document.createElement("button");b.className="tab"+(view===t.k?" active":"");b.setAttribute("role","tab");b.setAttribute("aria-selected",view===t.k?"true":"false");b.innerHTML=esc(t.l)+(t.n===null?'':' <span class="cnt">'+t.n+'</span>');b.addEventListener("click",function(){switchView(t.k);});return b;}
     primary.forEach(function(t){el.appendChild(tabBtn(t));});
@@ -933,7 +965,7 @@
   // ---- item table ----
   function thItems(){return '<tr>'+sth("items","item","Action item",'width:28%')+sth("items","owner","Owner")+sth("items","status","Status")+sth("items","due","Due")+'<th style="width:26%">Notes &amp; reference link</th><th style="text-align:right">Actions</th></tr>';}
   var LINKSVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px"><path d="M10 13a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1"/></svg>';
-  function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:kind==="event"?events:kind==="partner"?partners:kind==="prospect"?prospects:mcAll();return arr.filter(function(r){return r.id===id;})[0];}
+  function findRec(el){var kind=el.getAttribute("data-kind"),id=el.getAttribute("data-id");var arr=kind==="item"?items:kind==="event"?events:kind==="partner"?partners:kind==="prospect"?prospects:kind==="etevent"?etEvents:kind==="etlead"?etLeads:mcAll();return arr.filter(function(r){return r.id===id;})[0];}
   function cellIn(kind,id,f,val,ph){return '<input class="cellin" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="'+f+'" value="'+esc(val==null?"":val)+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+(f==="country"?' list="countryList"':(f==="owner"?' list="ownerList"':''))+'>';}
   function prioSel(kind,id,val){return '<select class="cellsel" data-kind="'+kind+'" data-id="'+esc(id)+'" data-f="priority">'+PRIOS.map(function(p){return '<option'+(p===val?" selected":"")+'>'+esc(p)+'</option>';}).join("")+'</select>';}
   var FORMATS=["Physical","Online"];
@@ -1185,6 +1217,89 @@
     },{okLabel:"Convert"});
   }
 
+  // ---- Event Tracker (separate SG pipeline + matched merchant leads) ----
+  var etSub="overview", etShowPast=false, etLeadFilter="";
+  function etTierSel(id,val){return '<select class="cellsel" data-kind="etevent" data-id="'+esc(id)+'" data-f="tier"><option value=""'+(val?"":" selected")+'>—</option>'+TIERS.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
+  function etDateCell(id,f,val){return '<div class="datewrap"><input class="cellin cell-date" type="date" data-kind="etevent" data-id="'+esc(id)+'" data-f="'+f+'" value="'+(isValidDate(val)?val:"")+'"></div>';}
+  function etLink(url){var u=safeUrl(url&&/^https?:\/\//i.test(url)?url:(url?("https://"+url):""));return u?'<a href="'+esc(u)+'" target="_blank" rel="noopener noreferrer" class="popen">open ↗</a>':'';}
+  function thETEvents(){return '<tr>'+
+    '<th style="width:16%">Event</th><th>Category</th><th>Tier</th><th>Start</th><th>End</th><th>Venue</th><th>Organizer</th><th>Organizer email</th><th>Vendor est</th><th>Leads</th><th>Link</th><th style="width:16%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function rowETEvent(x){
+    return '<tr class="main" data-kind="etevent" data-id="'+esc(x.id)+'">'+
+      '<td class="c-item"><textarea class="cellin cell-title" data-kind="etevent" data-id="'+esc(x.id)+'" data-f="name" rows="1" placeholder="Event name">'+esc(x.name||"")+'</textarea>'+metaLine(x)+'</td>'+
+      '<td>'+cellIn("etevent",x.id,"category",x.category,"Category")+'</td>'+
+      '<td>'+etTierSel(x.id,x.tier)+'</td>'+
+      '<td>'+etDateCell(x.id,"date_start",x.date_start)+'</td>'+
+      '<td>'+etDateCell(x.id,"date_end",x.date_end)+'</td>'+
+      '<td>'+cellIn("etevent",x.id,"venue",x.venue,"Venue")+'</td>'+
+      '<td>'+cellIn("etevent",x.id,"organizer",x.organizer,"Organizer")+'</td>'+
+      '<td>'+cellIn("etevent",x.id,"organizer_email",x.organizer_email,"email")+'</td>'+
+      '<td style="width:70px">'+cellIn("etevent",x.id,"vendor_count_est",x.vendor_count_est,"est")+'</td>'+
+      '<td style="width:60px"><input class="cellin" type="number" min="0" data-kind="etevent" data-id="'+esc(x.id)+'" data-f="hitpay_leads_count" value="'+esc(x.hitpay_leads_count==null?0:x.hitpay_leads_count)+'" style="width:52px"></td>'+
+      '<td>'+cellIn("etevent",x.id,"organizer_url",x.organizer_url,"link")+etLink(x.organizer_url)+'</td>'+
+      '<td class="c-notes"><textarea class="cellin celltxt" data-kind="etevent" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
+      '<td class="c-actions"><button class="icon-btn" data-etedel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
+    '</tr>';
+  }
+  function etMarketSel(id,val){return '<select class="cellsel" data-kind="etlead" data-id="'+esc(id)+'" data-f="market"><option value=""'+(val?"":" selected")+'>—</option>'+["SG","MY","TH","PH"].map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
+  function thETLeads(){return '<tr>'+
+    '<th style="width:15%">Brand</th><th>HitPay account</th><th>Category</th><th>Email</th><th>Phone</th><th>Link</th><th>Mkt</th><th>Verify</th><th>Event</th><th style="text-align:right">Actions</th></tr>';}
+  function rowETLead(l){
+    return '<tr class="main" data-kind="etlead" data-id="'+esc(l.id)+'">'+
+      '<td class="c-item"><textarea class="cellin cell-title" data-kind="etlead" data-id="'+esc(l.id)+'" data-f="brand" rows="1" placeholder="Brand">'+esc(l.brand||"")+'</textarea></td>'+
+      '<td>'+cellIn("etlead",l.id,"hitpay_account",l.hitpay_account,"HitPay account")+'</td>'+
+      '<td>'+cellIn("etlead",l.id,"category",l.category,"Category")+'</td>'+
+      '<td>'+cellIn("etlead",l.id,"email",l.email,"email")+'</td>'+
+      '<td>'+cellIn("etlead",l.id,"phone",l.phone,"phone")+'</td>'+
+      '<td>'+cellIn("etlead",l.id,"link",l.link,"link")+etLink(l.link)+'</td>'+
+      '<td style="width:64px">'+etMarketSel(l.id,l.market)+'</td>'+
+      '<td style="width:56px;text-align:center"><input type="checkbox" class="et-verify" data-kind="etlead" data-id="'+esc(l.id)+'"'+(l.verify?" checked":"")+' title="Confirm identity before outreach"></td>'+
+      '<td>'+cellIn("etlead",l.id,"event_name",l.event_name,"Event")+'</td>'+
+      '<td class="c-actions"><button class="icon-btn" data-etldel="'+esc(l.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
+    '</tr>';
+  }
+  function etEventMatches(x){
+    if(!etShowPast && isValidDate(x.date_end) && x.date_end<today()) return false;
+    if(filters.q){var q=filters.q.toLowerCase();var hay=(x.name+" "+x.category+" "+x.venue+" "+x.organizer+" "+x.organizer_email+" "+x.notes+" "+x.tier).toLowerCase();if(hay.indexOf(q)<0)return false;}
+    return true;
+  }
+  function etLeadMatches(l){
+    if(etLeadFilter && l.event_name!==etLeadFilter) return false;
+    if(filters.q){var q=filters.q.toLowerCase();var hay=(l.brand+" "+l.hitpay_account+" "+l.category+" "+l.email+" "+l.phone+" "+l.event_name+" "+l.market).toLowerCase();if(hay.indexOf(q)<0)return false;}
+    return true;
+  }
+  function newETEvent(){var x={id:uid("ete"),name:"",category:"",tier:"",date_start:"",date_end:"",venue:"",organizer:"",organizer_email:"",organizer_url:"",vendor_count_est:"",hitpay_leads_count:0,status:"active",notes:"",added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};etEvents.unshift(x);etSub="overview";saveAll();render();setTimeout(function(){var t=document.querySelector('#rows textarea.cell-title[data-kind="etevent"][data-id="'+x.id+'"]');if(t)t.focus();},50);}
+  function newETLead(){var l={id:uid("etl"),event_name:etLeadFilter||"",brand:"",hitpay_account:"",category:"",email:"",phone:"",link:"",market:"SG",verify:false,added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};etLeads.unshift(l);etSub="leads";saveAll();render();setTimeout(function(){var t=document.querySelector('#rows textarea.cell-title[data-kind="etlead"][data-id="'+l.id+'"]');if(t)t.focus();},50);}
+  function delETEvent(id){var x=etEvents.filter(function(z){return z.id===id;})[0];if(!x)return;askConfirm("Delete this event?",'"'+(x.name||"Untitled")+'"',function(){etEvents=etEvents.filter(function(z){return z.id!==id;});saveAll();render();toast("Event deleted");},{danger:true,okLabel:"Delete"});}
+  function delETLead(id){var l=etLeads.filter(function(z){return z.id===id;})[0];if(!l)return;askConfirm("Delete this lead?",'"'+(l.brand||"Untitled")+'"',function(){etLeads=etLeads.filter(function(z){return z.id!==id;});saveAll();render();toast("Lead deleted");},{danger:true,okLabel:"Delete"});}
+  function renderEtControls(){
+    var el=document.getElementById("etControls");
+    var evNames=etEvents.map(function(e){return e.name;}).filter(Boolean).sort();
+    var seg='<div class="etseg"><button type="button" class="etsub'+(etSub==="overview"?" on":"")+'" data-etsub="overview">Overview</button><button type="button" class="etsub'+(etSub==="leads"?" on":"")+'" data-etsub="leads">Leads ('+etLeads.length+')</button></div>';
+    var extra=etSub==="overview"?'<label class="etpast"><input type="checkbox" id="etShowPast"'+(etShowPast?" checked":"")+'> Show past</label>':'<select class="filter" id="etLeadFilter"><option value="">All events</option>'+evNames.map(function(n){return '<option'+(n===etLeadFilter?" selected":"")+'>'+esc(n)+'</option>';}).join("")+'</select>';
+    el.innerHTML=seg+extra;
+  }
+  function renderEtrack(){
+    document.getElementById("stats").style.display="none";
+    document.querySelector(".toolbar").style.display="flex";
+    document.getElementById("tableCard").style.display="";
+    document.getElementById("calWrap").style.display="none";
+    document.getElementById("reportWrap").style.display="none";
+    document.getElementById("newBtn").style.display="";
+    ["fPrio","fCountry","fChannel","fType","fOwner","fStatus","clearBtn"].forEach(function(idv){var e=document.getElementById(idv);if(e)e.style.display="none";});
+    document.getElementById("etControls").style.display="flex"; renderEtControls();
+    document.getElementById("tableCard").className="card view-ettrack";
+    document.getElementById("newLabel").textContent=etSub==="leads"?"New lead":"New event";
+    document.getElementById("search").placeholder=etSub==="leads"?"Search leads, brand, email…":"Search events, organizer, venue…";
+    var thead=document.getElementById("thead"), tb=document.getElementById("rows");
+    var list, rowFn;
+    if(etSub==="leads"){ thead.innerHTML=thETLeads(); list=etLeads.filter(etLeadMatches); rowFn=rowETLead; }
+    else { thead.innerHTML=thETEvents(); list=etEvents.filter(etEventMatches); rowFn=rowETEvent; }
+    document.getElementById("empty").style.display=list.length?"none":"block";
+    document.getElementById("emptySub").textContent=filters.q||etLeadFilter?"Try clearing search/filter.":(etSub==="leads"?"No matched merchants yet.":"No events yet.");
+    tb.innerHTML=list.map(rowFn).join("");
+    sizeTitles();
+  }
   function syncTypeFilter(){
     var f=document.getElementById("fType");
     var opts=(view==="content")?CTYPES:(view==="events")?EVENT_TYPES:(view==="prospects")?PROSPECT_TYPES:[];
@@ -1200,7 +1315,8 @@
   function render(){
     closeChanPop(); closeOwnerPop();
     renderTabs();
-    var isCal=(view==="cal"), isVids=(view==="vids"), isReport=(view==="report"), isEvents=(view==="events"), isPartners=(view==="partners"), isContent=(view==="content"), isProspects=(view==="prospects");
+    var isCal=(view==="cal"), isVids=(view==="vids"), isReport=(view==="report"), isEvents=(view==="events"), isPartners=(view==="partners"), isContent=(view==="content"), isProspects=(view==="prospects"), isEtrack=(view==="ettrack");
+    if(!isEtrack){var etc=document.getElementById("etControls");if(etc)etc.style.display="none";}
     document.getElementById("stats").style.display="none";
     document.querySelector(".toolbar").style.display=(isCal||isReport)?"none":"flex";
     document.getElementById("tableCard").style.display=(isCal||isReport)?"none":"";
@@ -1209,6 +1325,8 @@
     document.getElementById("newBtn").style.display=(isCal||isVids||isReport)?"none":"";
     if(isCal){ renderCalendar(); return; }
     if(isReport){ renderReport(); return; }
+    if(isEtrack){ renderEtrack(); return; }
+    document.getElementById("fOwner").style.display="";
     document.getElementById("fPrio").style.display="none";
     document.getElementById("fCountry").style.display=(view==="merch"||isContent||isVids||isEvents||isPartners||isProspects)?"":"none";
     document.getElementById("fChannel").style.display=(view==="merch"||isContent||isVids)?"":"none";
@@ -1480,7 +1598,9 @@
   function toggleTheme(){var cur=document.documentElement.getAttribute("data-theme");var dark=cur?cur==="dark":(window.matchMedia&&window.matchMedia("(prefers-color-scheme:dark)").matches);var n=dark?"light":"dark";try{localStorage.setItem(THEME_KEY,n);}catch(e){}applyTheme(n);}
 
   // ---- events ----
-  document.getElementById("newBtn").addEventListener("click",function(){view==="items"?openItem(null):view==="events"?newEvent():view==="partners"?newPartner():view==="prospects"?newProspect():openMerch(null);});
+  document.getElementById("newBtn").addEventListener("click",function(){view==="items"?openItem(null):view==="events"?newEvent():view==="partners"?newPartner():view==="prospects"?newProspect():view==="ettrack"?(etSub==="leads"?newETLead():newETEvent()):openMerch(null);});
+  document.getElementById("etControls").addEventListener("click",function(e){var b=e.target.closest("[data-etsub]");if(b){etSub=b.getAttribute("data-etsub");render();}});
+  document.getElementById("etControls").addEventListener("change",function(e){if(e.target.id==="etShowPast"){etShowPast=e.target.checked;render();}else if(e.target.id==="etLeadFilter"){etLeadFilter=e.target.value;render();}});
   document.getElementById("closeModal").addEventListener("click",closeItem);
   document.getElementById("cancelBtn").addEventListener("click",closeItem);
   document.getElementById("saveBtn").addEventListener("click",saveItem);
@@ -1538,6 +1658,8 @@
     var pd=e.target.closest("[data-pdel]");if(pd){delPartner(pd.getAttribute("data-pdel"));return;}
     var prc=e.target.closest("[data-prconv]");if(prc){convertToEvent(prc.getAttribute("data-prconv"));return;}
     var prd=e.target.closest("[data-prdel]");if(prd){delProspect(prd.getAttribute("data-prdel"));return;}
+    var eted=e.target.closest("[data-etedel]");if(eted){delETEvent(eted.getAttribute("data-etedel"));return;}
+    var etld=e.target.closest("[data-etldel]");if(etld){delETLead(etld.getAttribute("data-etldel"));return;}
     var prg=e.target.closest("[data-prgcal]");if(prg){var pe=prospects.filter(function(z){return z.id===prg.getAttribute("data-prgcal");})[0];if(pe){if(!(pe.name||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalProspectUrl(pe),"_blank","noopener");}return;}
     var aei=e.target.closest(".addeventinline");if(aei){newEvent(aei.getAttribute("data-pid"));return;}
     var eo=e.target.closest("[data-eopen]");if(eo){var eoid=eo.getAttribute("data-eopen");view="events";filters={q:"",status:"",prio:"",country:"",owner:"",channel:""};expanded[eoid]=true;["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});render();setTimeout(function(){var b=document.querySelector('[data-exp="'+eoid+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);return;}
@@ -1554,6 +1676,7 @@
     var cd=e.target.closest(".cell-date");if(cd){var rd=findRec(cd);if(rd){rd[cd.getAttribute("data-f")]=cd.value;stamp(rd);saveAll();render();}return;}
     var cs=e.target.closest(".cellsel");if(cs){var rc=findRec(cs);if(rc){rc[cs.getAttribute("data-f")]=cs.value;stamp(rc);saveAll();render();}return;}
     var ss=e.target.closest(".st-sel");if(ss){var r2=findRec(ss);if(r2){r2.status=ss.value;stamp(r2);saveAll();render();}return;}
+    var etv=e.target.closest(".et-verify");if(etv){var rv=findRec(etv);if(rv){rv.verify=etv.checked;stamp(rv);saveAll();}return;}
   });
   document.getElementById("rows").addEventListener("input",function(e){
     var ms=e.target.closest(".m-script");if(ms){var mmid=ms.getAttribute("data-mid");var mm=mcById(mmid);if(mm){mm.scriptLink=ms.value;stamp(mm);saveAll();var ma=ms.parentNode.querySelector(".m-open");var mu=safeUrl(ms.value);if(ma){if(mu){ma.href=mu;ma.style.display="";}else{ma.style.display="none";}}}return;}
@@ -1649,7 +1772,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
