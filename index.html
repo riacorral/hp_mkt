@@ -2,17 +2,16 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%230E2A5E'/%3E%3Cpath d='M11 9v14M21 9v14M11 16h10' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --bg:#F5F7FA; --surface:#FFFFFF; --surface-2:#FAFBFD;
-    --ink:#0F1826; --ink-2:#55627A; --ink-3:#8A96AC;
-    --border:#E5E9F0; --border-strong:#D6DDE8;
-    --accent:#1F5BFF; --accent-hover:#1546D6; --accent-ink:#FFFFFF; --accent-soft:#E9F0FF;
+    --bg:#FBFBFC; --surface:#FFFFFF; --surface-2:#F6F8FA;
+    --ink:#1E293B; --ink-2:#64748B; --ink-3:#94A3B8;
+    --border:#E5E7EB; --border-strong:#D1D5DB;
+    --accent:#002771; --accent-hover:#001B54; --accent-ink:#FFFFFF; --accent-soft:#E6ECF6;
     --danger:#DC2B38; --danger-soft:#FDECED;
     --shadow-sm:0 1px 2px rgba(16,24,38,.06);
-    --shadow-lg:0 12px 40px rgba(16,24,38,.14);
-    --radius:5px; --radius-sm:4px;
+    --shadow-lg:0 10px 15px -3px rgba(16,24,38,.10),0 4px 6px -4px rgba(16,24,38,.08);
+    --radius:12px; --radius-sm:7px;
     --s-grey-bg:#EEF1F6;  --s-grey-fg:#5A6577;
     --s-blue-bg:#E7EEFF;  --s-blue-fg:#1F52D6;
     --s-red-bg:#FDECED;   --s-red-fg:#CB2531;
@@ -65,13 +64,13 @@
   *{box-sizing:border-box}
   #authGate{position:fixed; inset:0; z-index:400; background:var(--bg); display:none; align-items:center; justify-content:center; padding:20px}
   #authGate.open{display:flex}
-  .authcard{max-width:360px; width:100%; text-align:center; border:1px solid var(--border); background:var(--surface); border-radius:5px; padding:32px 28px; box-shadow:var(--shadow-lg)}
+  .authcard{max-width:360px; width:100%; text-align:center; border:1px solid var(--border); background:var(--surface); border-radius:16px; padding:40px 32px; box-shadow:var(--shadow-lg)}
   .authcard h1{margin:0 0 6px; font-size:20px; letter-spacing:-.02em; font-weight:700}
   .authcard .mk{color:var(--accent)}
   .authcard p{color:var(--ink-2); font-size:13.5px; margin:0 0 20px}
   #gbtn{display:flex; justify-content:center; min-height:44px}
   #authErr{color:var(--danger); font-size:12.5px; margin-top:14px; display:none}
-  body{margin:0; background:var(--bg); color:var(--ink); font-family:'Manrope',system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased}
+  body{margin:0; background:var(--bg); color:var(--ink); font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif,"Apple Color Emoji","Segoe UI Emoji"; font-size:14.5px; line-height:1.5; -webkit-font-smoothing:antialiased}
   .wrap{max-width:1300px; margin:0 auto; padding:24px 20px 90px}
   a{color:var(--accent)}
 
@@ -133,7 +132,7 @@
   select.filter:focus{outline:none; border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
 
   /* table */
-  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-sm); overflow:hidden; border-top:3px solid var(--accent)}
+  .card{background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow-lg); overflow:hidden; border-top:3px solid var(--accent)}
   .card.view-merch{border-top-color:var(--s-teal-fg)}
   .card.view-items thead th{background:var(--accent-soft)}
   .card.view-merch thead th{background:var(--s-teal-bg)}
