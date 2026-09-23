@@ -344,6 +344,10 @@
   .subhead .scriptlink:hover{text-decoration:underline}
   .infowrap .subhead{margin-top:0}
   textarea.evinfo{min-height:88px; max-width:680px; background:var(--surface)}
+  .detrow{display:flex; flex-wrap:wrap; gap:16px; margin:2px 0 4px}
+  .detfield{display:flex; flex-direction:column; gap:3px; min-width:150px}
+  .detfield>span{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-3)}
+  .detfield .cellin,.detfield .cellsel{border:1px solid var(--border-strong); border-radius:6px; background:var(--surface-2)}
   table.vids{min-width:520px; border:1px solid var(--border); border-radius:5px; overflow:hidden; background:var(--surface)}
   table.vids th{background:transparent; font-size:10.5px; padding:8px 12px}
   table.vids td{padding:9px 12px; font-size:12.5px}
@@ -1109,7 +1113,7 @@
 
   // ---- events table ----
   function etypeSel(id,val){return '<select class="cellsel" data-kind="event" data-id="'+esc(id)+'" data-f="etype"><option value=""'+(val?"":" selected")+'>—</option>'+EVENT_TYPES.map(function(t){return '<option'+(t===val?" selected":"")+'>'+esc(t)+'</option>';}).join("")+'</select>';}
-  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:24%')+sth("events","owner","Owner")+sth("events","status","Status")+sth("events","etype","Type")+sth("events","format","Format")+sth("events","date","Date")+sth("events","country","Country")+'<th>Project</th><th style="width:20%">Notes</th><th style="text-align:right">Actions</th></tr>';}
+  function thEvents(){return '<tr><th class="c-exp"></th>'+sth("events","event","Event",'width:26%')+sth("events","owner","Owner")+sth("events","status","Status")+sth("events","etype","Type")+sth("events","date","Date")+'<th style="width:26%">Notes</th><th style="text-align:right">Actions</th></tr>';}
   function eventDateCell(x){var d=isValidDate(x.date)?x.date:"";var over=d && d<today() && isOpen(x);return '<div class="datewrap">'+(over?'<span class="odflag" title="Passed">⚠</span>':'')+'<input class="cellin cell-date'+(over?" overdue":"")+'" type="date" data-kind="event" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'" title="'+(over?"Event date passed":"Event date")+'"></div>';}
   var TASKDEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
   function tasksPanel(x){
@@ -1160,16 +1164,15 @@
       '<td>'+ownerCell("event",x.id,x.owner)+'</td>'+
       '<td>'+statusControl(x,"event")+'</td>'+
       '<td>'+etypeSel(x.id,x.etype)+'</td>'+
-      '<td>'+formatSel("event",x.id,x.format)+'</td>'+
       '<td>'+eventDateCell(x)+'</td>'+
-      '<td>'+cellIn("event",x.id,"country",x.country,"Country")+'</td>'+
-      '<td>'+partnerSel("event",x.id,x.partnerId)+'</td>'+
       '<td class="c-notes"><textarea class="cellin celltxt" data-kind="event" data-id="'+esc(x.id)+'" data-f="notes" placeholder="Notes">'+esc(x.notes||"")+'</textarea></td>'+
       '<td class="c-actions"><button class="icon-btn gcalbtn" data-gcal="'+esc(x.id)+'" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add to Google Calendar">'+GCALSVG+'</button><button class="icon-btn" data-edel="'+esc(x.id)+'" title="Delete" aria-label="Delete">'+DELSVG+'</button></td>'+
     '</tr>';
+    var details='<div class="detrow"><label class="detfield"><span>Format</span>'+formatSel("event",x.id,x.format)+'</label>'+
+      '<label class="detfield"><span>Country</span>'+cellIn("event",x.id,"country",x.country,"Country")+'</label>'+
+      '<label class="detfield"><span>Project</span>'+partnerSel("event",x.id,x.partnerId)+'</label></div>';
     var info='<div class="infowrap"><div class="subhead">Partners &amp; general info</div><textarea class="evinfo celltxt" data-id="'+esc(x.id)+'" placeholder="Partners, sponsors, contacts, venue, budget, links, general info…">'+esc(x.info||"")+'</textarea></div>';
-    var src="";
-    var sub= open? '<tr class="subrow"><td colspan="11"><div class="subwrap">'+src+info+'<div class="subhead" style="margin-top:16px">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
+    var sub= open? '<tr class="subrow"><td colspan="8"><div class="subwrap"><div class="subhead">Details</div>'+details+info+'<div class="subhead" style="margin-top:16px">Tasks'+(tc?' · '+tc:'')+'</div>'+tasksPanel(x)+'</div></td></tr>' : '';
     return main+sub;
   }
   function findET(el){var ee=el.closest("[data-eid]");var eid=ee?ee.getAttribute("data-eid"):null;var tr=el.closest("[data-tid]");var tid=tr?tr.getAttribute("data-tid"):null;var ev=events.concat(partners).filter(function(z){return z.id===eid;})[0];var t=(ev&&tid)?(ev.tasks||[]).filter(function(z){return z.id===tid;})[0]:null;return {e:ev,t:t};}
