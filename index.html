@@ -182,9 +182,10 @@
   .lnkico,.vi-open,.m-open,.pr-open{display:inline-flex; align-items:center; color:var(--accent); vertical-align:middle; margin-left:5px; flex:none}
   .lnkico:hover,.vi-open:hover,.m-open:hover,.pr-open:hover{opacity:.75}
   .c-exp{white-space:nowrap; text-align:center}
-  .mcount{display:inline-block; margin-top:5px; min-width:22px; padding:1px 7px; border:1px solid var(--border-strong); border-radius:20px; background:var(--surface-2); color:var(--ink-2); font-size:11px; font-weight:600; cursor:pointer; text-align:center; font-variant-numeric:tabular-nums}
+  .mcount{display:inline-block; margin-left:8px; vertical-align:middle; min-width:22px; padding:1px 7px; border:1px solid var(--border-strong); border-radius:20px; background:var(--surface-2); color:var(--ink-2); font-size:11px; font-weight:600; cursor:pointer; text-align:center; font-variant-numeric:tabular-nums}
   .mcount:hover{border-color:var(--accent); color:var(--accent)}
   .mcount.zero{color:var(--ink-3); opacity:.65}
+  .card.view-prospects .c-exp{width:74px; white-space:nowrap; text-align:left; padding-left:12px}
   .recur{display:inline-flex; align-items:center; gap:4px; margin-top:5px; font-size:11px; color:var(--ink-3); cursor:pointer; white-space:nowrap}
   .tabs-cal .tab.active{color:var(--s-violet-fg); border-bottom-color:var(--s-violet-fg)}
   .tabs-cal .tab.active .cnt{background:var(--s-violet-bg); color:var(--s-violet-fg)}
@@ -802,6 +803,110 @@
     etEvents.forEach(function(e){var p=byName[nk(e.name)]; if(p){ if(!p.organizer&&e.organizer)p.organizer=e.organizer; if(!p.organizerEmail&&e.organizer_email)p.organizerEmail=e.organizer_email; }});
     try{localStorage.setItem("prospects_enriched_v1","1");}catch(e){}
     saveAll();
+  }
+  // One-time sync from the Events Hunter artifact: fills organizer/email on prospects
+  // and adds the newly-matched HitPay merchant leads (Boutiques, Smart Home, Hitcheed, HomeFest).
+  function syncHunterV2(){
+    try{ if(localStorage.getItem("hunter_sync_v2")) return; }catch(e){}
+    function nk(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");}
+    // Resolve an artifact event name to the matching prospect's exact name (for lead linkage).
+    function resolveName(a){
+      var ak=nk(a), hit=a;
+      prospects.forEach(function(p){var pk=nk(p.name); if(pk===ak||pk.indexOf(ak)===0||ak.indexOf(pk)===0)hit=p.name;});
+      return hit;
+    }
+    // organizer name / email by artifact event name (uncertain organizers skipped)
+    var ORG=[
+      ["HomeFest 2026 (Round 2)","IDLah / Reno Fiesta",""],
+      ["Common Rare Singapore 2026","Common Rare Market","hello@common-rare.com"],
+      ["Hitcheed Wedding Wonderland","Hitcheed",""],
+      ["Makers' Market @ PLQ Plaza - September","INVADE","spaces@invade.co"],
+      ["Fiesta Botanica","Ascent Projects",""],
+      ["Artcade Singapore 2026","Artcade SG",""],
+      ["The Smart Home Tech Show 2026","Hossey Events","sales@hosseyevents.com"],
+      ["Eldex Asia 2026","Fireworks Muziyi Media","info@eldexasia.com"],
+      ["ITB Asia 2026","Messe Berlin Asia Pacific",""],
+      ["Singapore International Agri-Food Week 2026","SFA / Constellar","info@sginternationalagrifoodweek.com.sg"],
+      ["Asia Pacific Food Expo (APFE) 2026","SFMA","enquiries@sfma.org.sg"],
+      ["Singapore Fintech Festival 2026","MAS / GFTN",""],
+      ["Boutiques Singapore — The Gifting Edition 2026","Boutique Fairs",""],
+      ["Christmas Together @ Marina Bay Sands","Oceanus Media",""],
+      ["EOY Music, Comics & Arts Festival 2026","Events of the Year","tim@theeoy.com"]
+    ];
+    var pByKey={}; prospects.forEach(function(p){pByKey[nk(p.name)]=p;});
+    function findProspect(a){var ak=nk(a),hit=null;prospects.forEach(function(p){var pk=nk(p.name);if(pk===ak||pk.indexOf(ak)===0||ak.indexOf(pk)===0)hit=p;});return hit;}
+    ORG.forEach(function(r){var p=findProspect(r[0]); if(p){ if(!p.organizer&&r[1])p.organizer=r[1]; if(!p.organizerEmail&&r[2])p.organizerEmail=r[2]; p.updated=today(); }});
+    // Newly-matched merchant leads. [event, brand, hitpay_account, email, phone, link, tpv, conf]
+    var L=[
+      // Boutiques Singapore — The Gifting Edition 2026
+      ["Boutiques Singapore — The Gifting Edition 2026","Anothersole","Anothersole","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Aōmorie","Aōmorie","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","cheak","CHEAK PTE. LTD.","","","","100k-250k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Continuum Accessories","Continuum Accessories","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Days of Ever","Doe Eyed (display: Days of Ever)","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Nazariya","Nazariya","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Nimbu","Nimbu","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Omollomo","Revive Snacks Pte Ltd (display: Omollomo)","orders@omollomo.com","+65 9029 1224","revivesnacks.com.sg","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Patrichory","Patrichory","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Plain Prints Project","Print DNA (display: Plain Prints Project)","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Pryce Tea","Pryce Tea","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Raja Rani","RAJA RANI LIFESTYLE PTE. LTD.","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","RE:ERTH","Reterra Pte Ltd (display: RE:ERTH)","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","SABRINAGOH","ELOHIM BY SABRINA GOH PTE LTD","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Scent Journer","SCENT JOURNER PTE LTD","alex.lim@scentjourner.com","+65 9023 8749","scentjourner.com","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","SOICOCO","Soicoco","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","stillgoods","stillgoods","hello@shopstillgoods.com","+65 9616 0288","shopstillgoods.com","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","SUNBIRD","Sunbird","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Tell Your Children","TYC Studios Pte Ltd (display: Tell Your Children)","kevin@tycstudios.com","+65 9221 3498","tellyourchildren.world","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","The 1925 Brewing Co.","Sons & Sons Pte Ltd (display: The 1925 Brewing Co.)","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","THE EVERYDAY CLUB","The Everyday Club","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Webeings","Webeings Pte Ltd","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","Woodstock Beverages","Woodstock Beverages Pte Ltd","","","","0-50k","High"],
+      ["Boutiques Singapore — The Gifting Edition 2026","GINLEE","Ginlee Studio Pte Ltd (display: GINLEE Studio)","","","","0-50k","Medium"],
+      ["Boutiques Singapore — The Gifting Edition 2026","GRAYE","— verify manually","","","","","Medium"],
+      ["Boutiques Singapore — The Gifting Edition 2026","SOJAO","— verify manually","","","","","Medium"],
+      // The Smart Home Tech Show 2026
+      ["The Smart Home Tech Show 2026","AQUA LUXE","Aqua Luxe Pte Ltd","","","","0-50k","High"],
+      ["The Smart Home Tech Show 2026","CELLINI","Cellini Design Center Pte Ltd","","","","0-50k","High"],
+      ["The Smart Home Tech Show 2026","INTERDESK","B.S. Furniture Pte Ltd (display: Interdesk)","","","","50k-100k","High"],
+      ["The Smart Home Tech Show 2026","IRUSU","IRUSU PTE LTD","","","","0-50k","High"],
+      ["The Smart Home Tech Show 2026","MIZZU","MIZZU PTE LTD","","","","Not Active","High"],
+      ["The Smart Home Tech Show 2026","MOBOT","MOBOT PTE. LTD.","","","","0-50k","High"],
+      ["The Smart Home Tech Show 2026","MOWE","Mowe Pte Ltd (display: Mowe Smart Home)","","","","0-50k","High"],
+      ["The Smart Home Tech Show 2026","NOVITA","9 Koi Marketing Pte Ltd (display: novita SG)","","","","0-50k","High"],
+      ["The Smart Home Tech Show 2026","REMODE HUB","Remode Hub SG","","","","Not Active","High"],
+      ["The Smart Home Tech Show 2026","STRYV","Evolut Holdings Pte Ltd (display: Stryv)","","","","Not Active","High"],
+      ["The Smart Home Tech Show 2026","YEW DIGITAL LOCK","YEW DIGITAL LOCK","","","","Not Active","High"],
+      ["The Smart Home Tech Show 2026","GOODLIVING","Component Singapore Pte Ltd (display: GoodLiving Singapore)","","","","0-50k","Medium"],
+      ["The Smart Home Tech Show 2026","STERRA","Celesterra Pte Ltd","","","","0-50k","Medium"],
+      ["The Smart Home Tech Show 2026","MY DIGITAL LOCK / AN DIGITAL LOCK","MASTER DIGITAL LOCK PTE. LTD.","","","","0-50k","Medium"],
+      ["The Smart Home Tech Show 2026","TWIN CITY AIR-CONDITIONING","Twin City Air-Conditioning Engineering","","","","Not Active","Medium"],
+      // Hitcheed Wedding Wonderland
+      ["Hitcheed Wedding Wonderland","Eileen Bridal","Eileen Bridal","","","","0-50k","High"],
+      ["Hitcheed Wedding Wonderland","TAILORED JEWEL","TAILORED JEWEL (SG) PTE. LTD.","","","","0-50k","High"],
+      ["Hitcheed Wedding Wonderland","MAISON MUGEN","Maison Mugen Grp Pte Ltd","","","","Not Active","High"],
+      ["Hitcheed Wedding Wonderland","Bee Inspired Pte Ltd","Bee Inspired Pte Ltd","","","","Not Active","High"],
+      ["Hitcheed Wedding Wonderland","XOXO and Co.","XOXO & CO PTE LTD","","","","0-50k","High"],
+      ["Hitcheed Wedding Wonderland","The Chinese Wedding Shop","The Chinese Wedding Shop LLP","","","","0-50k","High"],
+      ["Hitcheed Wedding Wonderland","RELA Events","Rela Events Pte Ltd","","","","0-50k","High"],
+      ["Hitcheed Wedding Wonderland","The Gown Atelier","The Atelier & Co Holdings Pte Ltd","","","","Not Active","Medium"],
+      // HomeFest 2026 (Round 2)
+      ["HomeFest 2026 (Round 2)","CELLINI","Cellini Design Center Pte Ltd","","","","0-50k","High"],
+      ["HomeFest 2026 (Round 2)","INTERDESK","B.S. Furniture Pte Ltd (display: Interdesk)","","","","50k-100k","High"]
+    ];
+    var have={}; etLeads.forEach(function(l){have[nk(l.event_name)+"|"+nk(l.brand)]=true;});
+    var added=0;
+    L.forEach(function(r){
+      var evName=resolveName(r[0]);
+      var key=nk(evName)+"|"+nk(r[1]);
+      if(have[key])return;
+      have[key]=true; added++;
+      etLeads.push({id:uid("etl"),event_name:evName,brand:r[1],hitpay_account:r[2],
+        category:(r[6]?("TPV "+r[6]):""),email:r[3],phone:r[4],link:r[5],market:"SG",
+        verify:(r[7]==="Medium"),added:today(),updated:today(),addedBy:"Events Hunter",updatedBy:"Events Hunter"});
+    });
+    try{localStorage.setItem("hunter_sync_v2","1");}catch(e){}
+    if(added||ORG.length){ normalizeState(); saveNow(); }
   }
   function importEventTracker(){
     try{ if(localStorage.getItem("ettracker_seeded_v1")) return false; }catch(e){}
@@ -1816,7 +1921,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
