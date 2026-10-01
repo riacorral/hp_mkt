@@ -325,6 +325,10 @@
 
   .country{display:inline-flex; align-items:center; gap:6px; white-space:nowrap; color:var(--ink-2); font-size:12.5px}
   .flag{font-size:14px; line-height:1}
+  .cctag{display:inline-flex; align-items:center; gap:4px; font-size:10.5px; font-weight:700; letter-spacing:.03em; padding:1px 8px; border-radius:20px; background:var(--surface-2); border:1px solid var(--border-strong); color:var(--ink-2); margin-top:4px; vertical-align:middle}
+  .cctag.cc-SG{background:var(--s-blue-bg); border-color:transparent; color:var(--s-blue-fg)}
+  .cctag.cc-MY{background:var(--s-green-bg); border-color:transparent; color:var(--s-green-fg)}
+  .cctag.cc-PH{background:var(--s-amber-bg); border-color:transparent; color:var(--s-amber-fg)}
 
   .reflink a, .videolink a{color:var(--accent); text-decoration:none; font-weight:600; display:inline-flex; align-items:center; gap:5px; word-break:break-all}
   .reflink a:hover, .videolink a:hover{text-decoration:underline}
@@ -1108,6 +1112,7 @@
   function ownerCell(kind,id,val){var names=String(val||"").split(",").map(function(s){return s.trim();}).filter(Boolean);return '<button type="button" class="ownerpick" data-kind="'+kind+'" data-id="'+esc(id)+'">'+(names.length?esc(names.join(", ")):'<span class="chanplace">Owner</span>')+ownerCaret()+'</button>';}
   function firstName(n){return String(n||"").trim().split(/\s+/)[0]||"";}
   function shortDate(ds){if(/^\d{4}-\d{2}-\d{2}$/.test(ds||"")){var p=ds.split("-");return (MONTHS[parseInt(p[1],10)-1]||"").slice(0,3)+" "+parseInt(p[2],10);}return ds||"—";}
+  function countryTag(code){var c=String(code||"").toUpperCase();if(!c)return "";var fl={SG:"🇸🇬",MY:"🇲🇾",PH:"🇵🇭"}[c]||"";return '<span class="cctag cc-'+esc(c)+'" title="Country">'+(fl?fl+" ":"")+esc(c)+'</span>';}
   function metaLine(x,extra){
     var who=firstName(x.updatedBy||x.addedBy);
     var full="Added "+(x.added||"—")+(x.addedBy?" by "+x.addedBy:"")+"  ·  Updated "+(x.updated||"—")+(x.updatedBy?" by "+x.updatedBy:"");
@@ -1269,7 +1274,7 @@
     var tc=(x.tasks||[]).length;
     var main='<tr class="main" data-kind="event" data-id="'+esc(x.id)+'">'+
       '<td class="c-exp"><button class="expbtn'+(open?" open":"")+'" data-exp="'+esc(x.id)+'" aria-label="Toggle tasks"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" style="width:13px;height:13px"><path d="M9 6l6 6-6 6"/></svg></button></td>'+
-      '<td class="c-item"><textarea class="cellin cell-title" data-kind="event" data-id="'+esc(x.id)+'" data-f="event" rows="1" placeholder="Event name">'+esc(x.event||"")+'</textarea>'+metaLine(x,tc?' · '+tc+' task'+(tc>1?"s":""):"")+'</td>'+
+      '<td class="c-item"><textarea class="cellin cell-title" data-kind="event" data-id="'+esc(x.id)+'" data-f="event" rows="1" placeholder="Event name">'+esc(x.event||"")+'</textarea>'+countryTag(x.country)+metaLine(x,tc?' · '+tc+' task'+(tc>1?"s":""):"")+'</td>'+
       '<td>'+ownerCell("event",x.id,x.owner)+'</td>'+
       '<td>'+statusControl(x,"event")+'</td>'+
       '<td>'+etypeSel(x.id,x.etype)+'</td>'+
