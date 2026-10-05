@@ -923,6 +923,34 @@
     try{localStorage.setItem("hunter_sync_v2","1");}catch(e){}
     if(added||ORG.length){ normalizeState(); saveNow(); }
   }
+  // One-time preload of a standard task checklist onto every event.
+  // Build with AI workshops also get a "pre-work" task (with the Notion link) after step 2.
+  function preloadEventTasks(){
+    try{ if(localStorage.getItem("events_tasks_preload_v1")) return; }catch(e){}
+    function nt(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");}
+    function addDays(ds,n){var d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return fmtDate(d.getFullYear(),d.getMonth(),d.getDate());}
+    function partnerName(id){var p=partners.filter(function(z){return z.id===id;})[0];return p?(p.partner||""):"";}
+    var PREWORK="https://app.notion.com/p/hitpay/Build-with-AI-x-HitPay-Workshop-Pre-Session-Setup-3ad0a0076da080939c6fc87efea42300";
+    var changed=false;
+    events.forEach(function(e){
+      e.tasks=Array.isArray(e.tasks)?e.tasks:[];
+      var isBWA=/build\s*with\s*ai/i.test((e.event||"")+" "+partnerName(e.partnerId));
+      var list=[
+        {task:"Create Luma event page"},
+        {task:"Post event on HitPay channels (LinkedIn, Socials, EDM)"}
+      ];
+      if(isBWA) list.push({task:"3 days before event: ask participants to do pre-work",notes:PREWORK,due:(isValidDate(e.date)?addDays(e.date,-3):"")});
+      list.push({task:"Publicise on partner pages / external groups"});
+      list.push({task:"After event: post on socials — mention The Working Capitol as event partner"});
+      var have={}; e.tasks.forEach(function(t){have[nt(t.task)]=true;});
+      list.forEach(function(it){
+        if(have[nt(it.task)])return; have[nt(it.task)]=true; changed=true;
+        e.tasks.push({id:uid("t"),task:it.task,owner:"",status:"Not started",due:it.due||"",notes:it.notes||""});
+      });
+    });
+    try{localStorage.setItem("events_tasks_preload_v1","1");}catch(e){}
+    if(changed){ normalizeState(); saveNow(); }
+  }
   function importEventTracker(){
     try{ if(localStorage.getItem("ettracker_seeded_v1")) return false; }catch(e){}
     if(etEvents.length||etLeads.length){ try{localStorage.setItem("ettracker_seeded_v1","1");}catch(e){} return false; }
@@ -1954,7 +1982,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();preloadEventTasks();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
