@@ -259,6 +259,10 @@
   .calev-task{background:var(--cal-task-bg)}
   .calev-maybe{background:var(--s-amber-bg)}
   .calev-social{background:var(--cal-social-bg)}
+  .calev-phys{background:var(--s-green-bg)}
+  .calev-webinar{background:var(--s-violet-bg)}
+  .calev-online{background:var(--s-blue-bg)}
+  .calev-shoot{background:var(--cal-ev-bg)}
   .shoottag{color:var(--ink-2); border-color:var(--border-strong)}
   .callist{display:flex; flex-direction:column}
   .cl-day{display:flex; gap:14px; align-items:flex-start; padding:9px 4px; border-bottom:1px solid var(--border)}
@@ -278,6 +282,10 @@
   .tsktag{color:var(--cal-task-fg); border-color:var(--cal-task-fg)}
   .vidtag{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
   .evtag{font-size:8.5px; font-weight:800; letter-spacing:.04em; color:var(--cal-ev-fg); background:var(--surface); border:1px solid var(--cal-ev-fg); border-radius:3px; padding:0 3px; vertical-align:1px}
+  .evtag.tg-phys{color:var(--s-green-fg); border-color:var(--s-green-fg)}
+  .evtag.tg-webinar{color:var(--s-violet-fg); border-color:var(--s-violet-fg)}
+  .evtag.tg-online{color:var(--s-blue-fg); border-color:var(--s-blue-fg)}
+  .evtag.tg-shoot{color:var(--cal-ev-fg); border-color:var(--cal-ev-fg)}
   .calempty{padding:40px 20px; text-align:center; color:var(--ink-3)}
   @media (max-width:640px){ .calcell{min-height:78px} .caldow:nth-child(n){font-size:9px} }
   .tablescroll{overflow-x:auto}
@@ -1534,7 +1542,7 @@
     if(!filters.channel){
       if(calTypeOk("cshoot")) content.forEach(function(c){ if(!isValidDate(c.date))return; if(!calCountryOk(c.country))return; (map[c.date]=map[c.date]||[]).push({kind:"cshoot",id:c.id,title:c.merchant||"Untitled",channels:[],status:"",ctype:c.ctype}); });
       events.forEach(function(e){ if(!calCountryOk(e.country))return;
-      if(isValidDate(e.date)&&calTypeOk("event")) (map[e.date]=map[e.date]||[]).push({kind:"event",id:e.id,title:e.event||"Untitled event",channels:[],status:e.status,etype:e.etype});
+      if(isValidDate(e.date)&&calTypeOk("event")) (map[e.date]=map[e.date]||[]).push({kind:"event",id:e.id,title:e.event||"Untitled event",channels:[],status:e.status,etype:e.etype,format:e.format});
       if(calTypeOk("task")) (e.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"task",id:e.id,title:t.task||"Untitled task",channels:[],status:t.status}); });
     });
       if(calTypeOk("ptask")) partners.forEach(function(p){ if(!calCountryOk(p.country))return; (p.tasks||[]).forEach(function(t){ if(!isValidDate(t.due))return; (map[t.due]=map[t.due]||[]).push({kind:"ptask",id:p.id,title:t.task||"Untitled task",channels:[],status:t.status}); }); });
@@ -1546,10 +1554,17 @@
     }
     return map;
   }
+  function evBucket(ev){var t=String(ev.etype||"").toLowerCase();if(t==="webinar")return "webinar";if(String(ev.format||"")==="Online")return "online";return "phys";}
   function calChipHtml(ev){
     var isEv=ev.kind==="event", isTask=(ev.kind==="task"||ev.kind==="ptask"), isProsp=ev.kind==="prospect", isShoot=ev.kind==="cshoot";
-    var tag=isEv?'<span class="evtag">'+esc((ev.etype||"EVENT").toUpperCase())+'</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':isProsp?'<span class="evtag maybetag">MAYBE</span> ':isShoot?'<span class="evtag shoottag">'+esc((ev.ctype||"CONTENT").toUpperCase())+'</span> ':'';
-    return '<div class="calev'+(isEv?" calev-ev":isTask?" calev-task":isProsp?" calev-maybe":" calev-social")+'" data-kind="'+esc(ev.kind)+'" data-id="'+esc(ev.id)+'"><div class="cm">'+tag+esc(ev.title)+'</div><div class="csub">'+
+    var cls,tagcls;
+    if(isEv){var b=evBucket(ev);cls="calev-"+b;tagcls="tg-"+b;}
+    else if(isShoot){cls="calev-shoot";tagcls="tg-shoot";}
+    else if(isTask){cls="calev-task";tagcls="tsktag";}
+    else if(isProsp){cls="calev-maybe";tagcls="maybetag";}
+    else {cls="calev-social";tagcls="";}
+    var tag=isEv?'<span class="evtag '+tagcls+'">'+esc((ev.etype||"EVENT").toUpperCase())+'</span> ':isShoot?'<span class="evtag '+tagcls+'">'+esc((ev.ctype||"CONTENT").toUpperCase())+'</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':isProsp?'<span class="evtag maybetag">MAYBE</span> ':'';
+    return '<div class="calev '+cls+'" data-kind="'+esc(ev.kind)+'" data-id="'+esc(ev.id)+'"><div class="cm">'+tag+esc(ev.title)+'</div><div class="csub">'+
       (ev.channels||[]).map(function(ch){return '<span class="cch chan '+esc(ch)+'">'+esc(ch)+'</span>';}).join("")+
       (ev.status?'<span class="pill '+statusCls(ev.status)+'" style="font-size:9.5px;padding:1px 6px">'+esc(ev.status)+'</span>':'')+'</div></div>';
   }
