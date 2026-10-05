@@ -260,10 +260,10 @@
   .calev-task{background:var(--cal-task-bg)}
   .calev-maybe{background:var(--s-amber-bg)}
   .calev-social{background:var(--cal-social-bg)}
-  .calev-phys{background:var(--s-green-bg)}
-  .calev-webinar{background:var(--s-blue-bg)}
-  .calev-online{background:var(--s-blue-bg)}
-  .calev-shoot{background:var(--cal-ev-bg)}
+  .calev-green{background:var(--s-green-bg)}
+  .calev-yellow{background:var(--s-amber-bg)}
+  .calev-purple{background:var(--s-violet-bg)}
+  .calev-blue{background:var(--s-blue-bg)}
   .shoottag{color:var(--ink-2); border-color:var(--border-strong)}
   .callist{display:flex; flex-direction:column}
   .cl-day{display:flex; gap:14px; align-items:flex-start; padding:9px 4px; border-bottom:1px solid var(--border)}
@@ -283,10 +283,10 @@
   .tsktag{color:var(--cal-task-fg); border-color:var(--cal-task-fg)}
   .vidtag{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
   .evtag{font-size:8.5px; font-weight:800; letter-spacing:.04em; color:var(--cal-ev-fg); background:var(--surface); border:1px solid var(--cal-ev-fg); border-radius:3px; padding:0 3px; vertical-align:1px}
-  .evtag.tg-phys{color:var(--s-green-fg); border-color:var(--s-green-fg)}
-  .evtag.tg-webinar{color:var(--s-blue-fg); border-color:var(--s-blue-fg)}
-  .evtag.tg-online{color:var(--s-blue-fg); border-color:var(--s-blue-fg)}
-  .evtag.tg-shoot{color:var(--cal-ev-fg); border-color:var(--cal-ev-fg)}
+  .evtag.tg-green{color:var(--s-green-fg); border-color:var(--s-green-fg)}
+  .evtag.tg-yellow{color:var(--s-amber-fg); border-color:var(--s-amber-fg)}
+  .evtag.tg-purple{color:var(--s-violet-fg); border-color:var(--s-violet-fg)}
+  .evtag.tg-blue{color:var(--s-blue-fg); border-color:var(--s-blue-fg)}
   .calempty{padding:40px 20px; text-align:center; color:var(--ink-3)}
   @media (max-width:640px){ .calcell{min-height:78px} .caldow:nth-child(n){font-size:9px} }
   .tablescroll{overflow-x:auto}
@@ -1559,16 +1559,17 @@
     }
     return map;
   }
-  function evBucket(ev){var t=String(ev.etype||"").toLowerCase();if(t==="webinar")return "webinar";if(String(ev.format||"")==="Online")return "online";return "phys";}
+  // Calendar color rule: Maybe→blue, Physical+Shoot→yellow, Physical(not shoot)→green, Online→purple
+  function evBucket(ev){if(String(ev.format||"")==="Online")return "purple";if(String(ev.etype||"").toLowerCase()==="shoot")return "yellow";return "green";}
   function calChipHtml(ev){
     var isEv=ev.kind==="event", isTask=(ev.kind==="task"||ev.kind==="ptask"), isProsp=ev.kind==="prospect", isShoot=ev.kind==="cshoot";
     var cls,tagcls;
-    if(isEv){var b=evBucket(ev);cls="calev-"+b;tagcls="tg-"+b;}
-    else if(isShoot){cls="calev-shoot";tagcls="tg-shoot";}
+    if(isProsp){cls="calev-blue";tagcls="tg-blue";}
+    else if(isShoot){cls="calev-yellow";tagcls="tg-yellow";}
+    else if(isEv){var b=evBucket(ev);cls="calev-"+b;tagcls="tg-"+b;}
     else if(isTask){cls="calev-task";tagcls="tsktag";}
-    else if(isProsp){cls="calev-maybe";tagcls="maybetag";}
     else {cls="calev-social";tagcls="";}
-    var tag=isEv?'<span class="evtag '+tagcls+'">'+esc((ev.etype||"EVENT").toUpperCase())+'</span> ':isShoot?'<span class="evtag '+tagcls+'">'+esc((ev.ctype||"CONTENT").toUpperCase())+'</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':isProsp?'<span class="evtag maybetag">MAYBE</span> ':'';
+    var tag=isEv?'<span class="evtag '+tagcls+'">'+esc((ev.etype||"EVENT").toUpperCase())+'</span> ':isShoot?'<span class="evtag '+tagcls+'">'+esc((ev.ctype||"CONTENT").toUpperCase())+'</span> ':isTask?'<span class="evtag tsktag">TASK</span> ':isProsp?'<span class="evtag tg-blue">MAYBE</span> ':'';
     var att=String(ev.attendees||"").trim(), cap=String(ev.capacity||"").trim(), attBadge="";
     if(cap)attBadge='<span class="cattend" title="Attendees / capacity">'+esc(att||"0")+'/'+esc(cap)+'</span>';
     else if(att)attBadge='<span class="cattend" title="Attendees">'+esc(att)+'</span>';
