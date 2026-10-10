@@ -943,7 +943,7 @@
       var isBWA=/build\s*with\s*ai/i.test((e.event||"")+" "+partnerName(e.partnerId));
       var list=[
         {task:"Create Luma event page",group:"Before"},
-        {task:"Post event on HitPay channels (LinkedIn, Socials, EDM)",group:"Before"}
+        {task:"Publicise on HitPay channels (LinkedIn, Socials, EDM)",group:"Before"}
       ];
       if(isBWA) list.push({task:"3 days before event: ask participants to do pre-work",notes:PREWORK,due:(isValidDate(e.date)?addDays(e.date,-3):""),group:"Before"});
       list.push({task:"Publicise on partner pages / external groups",group:"Before"});
@@ -981,6 +981,21 @@
       });
     });
     try{localStorage.setItem("add_new_tasks_v1","1");}catch(e){}
+    if(changed){ normalizeState(); saveNow(); }
+  }
+  // Rename "Post event on HitPay channels…" → "Publicise on HitPay channels…" on already-saved events.
+  function renamePostToPubliciseV1(){
+    try{ if(localStorage.getItem("rename_post_publicise_v1")) return; }catch(e){}
+    var changed=false;
+    events.concat(partners).forEach(function(e){
+      (e.tasks||[]).forEach(function(t){
+        if(t.task==="Post event on HitPay channels (LinkedIn, Socials, EDM)"){
+          t.task="Publicise on HitPay channels (LinkedIn, Socials, EDM)";
+          changed=true;
+        }
+      });
+    });
+    try{localStorage.setItem("rename_post_publicise_v1","1");}catch(e){}
     if(changed){ normalizeState(); saveNow(); }
   }
   // Rename "Post-event poll" → "Feedback survey" on any already-saved events.
@@ -2089,7 +2104,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();renamePollToSurveyV1();assignTaskGroupsV1();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();renamePollToSurveyV1();renamePostToPubliciseV1();assignTaskGroupsV1();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
