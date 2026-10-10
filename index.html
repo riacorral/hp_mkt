@@ -359,6 +359,7 @@
   tr.subrow > td{background:var(--surface-2); padding:0}
   .subwrap{padding:6px 14px 16px 48px}
   .subhead{font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-2); margin:12px 0 8px; display:flex; align-items:center; gap:8px}
+  .task-group-head{font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-2); margin:16px 0 6px; padding-bottom:4px; border-bottom:1px solid var(--border);}
   .subhead .scriptlink{margin-left:auto; text-transform:none; letter-spacing:0; font-size:12px; font-weight:600; color:var(--accent); text-decoration:none; display:inline-flex; align-items:center; gap:5px}
   .subhead .scriptlink:hover{text-decoration:underline}
   .infowrap .subhead{margin-top:0}
@@ -776,7 +777,7 @@
     content.forEach(function(m,i){m.videos=(Array.isArray(m.videos)?m.videos:[]).map(function(v,j){return normVideo(v,i,j);});});
     content.forEach(function(x){if(!x.added)x.added=x.updated||"—"; if(x.addedBy===undefined)x.addedBy=""; if(x.updatedBy===undefined)x.updatedBy=""; if(x.scriptLink===undefined)x.scriptLink=""; if(x.merchant===undefined)x.merchant=String(x.name||""); if(x.ctype===undefined)x.ctype="Merchant"; if(x.date===undefined)x.date=""; if(x.country){var cc=CNORM[String(x.country).trim().toLowerCase()]; if(cc)x.country=cc;}});
     events.forEach(function(e){
-      e.tasks=(Array.isArray(e.tasks)?e.tasks:[]).map(function(t){return {id:t.id||uid("t"),task:String(t.task||""),owner:String(t.owner||""),status:t.status||"Not started",due:String(t.due||""),notes:String(t.notes||"")};});
+      e.tasks=(Array.isArray(e.tasks)?e.tasks:[]).map(function(t){return {id:t.id||uid("t"),task:String(t.task||""),owner:String(t.owner||""),status:t.status||"Not started",due:String(t.due||""),notes:String(t.notes||""),group:t.group||"Before"};});
       if(e.event===undefined)e.event=String(e.name||"");
       if(!e.added)e.added=e.updated||"—"; if(e.addedBy===undefined)e.addedBy=""; if(e.updatedBy===undefined)e.updatedBy="";
       if(e.priority===undefined)e.priority="Medium"; if(e.status===undefined)e.status="Not started"; if(e.notes===undefined)e.notes=""; if(e.info===undefined)e.info=""; if(e.format===undefined)e.format="";
@@ -789,7 +790,7 @@
       if(!p.added)p.added=p.updated||"—"; if(p.addedBy===undefined)p.addedBy=""; if(p.updatedBy===undefined)p.updatedBy="";
       if(p.priority===undefined)p.priority="Medium"; if(p.status===undefined)p.status="Not started"; if(p.notes===undefined)p.notes=""; if(p.info===undefined)p.info="";
       if(p.country){var pc=CNORM[String(p.country).trim().toLowerCase()]; if(pc)p.country=pc;}
-      p.tasks=(Array.isArray(p.tasks)?p.tasks:[]).map(function(t){return {id:t.id||uid("t"),task:String(t.task||""),owner:String(t.owner||""),status:t.status||"Not started",due:String(t.due||""),notes:String(t.notes||"")};});
+      p.tasks=(Array.isArray(p.tasks)?p.tasks:[]).map(function(t){return {id:t.id||uid("t"),task:String(t.task||""),owner:String(t.owner||""),status:t.status||"Not started",due:String(t.due||""),notes:String(t.notes||""),group:t.group||"Before"};});
     });
     // Drop dangling event→partner links.
     var pids={}; partners.forEach(function(p){pids[p.id]=1;});
@@ -941,20 +942,20 @@
       e.tasks=Array.isArray(e.tasks)?e.tasks:[];
       var isBWA=/build\s*with\s*ai/i.test((e.event||"")+" "+partnerName(e.partnerId));
       var list=[
-        {task:"Create Luma event page"},
-        {task:"Post event on HitPay channels (LinkedIn, Socials, EDM)"}
+        {task:"Create Luma event page",group:"Before"},
+        {task:"Post event on HitPay channels (LinkedIn, Socials, EDM)",group:"Before"}
       ];
-      if(isBWA) list.push({task:"3 days before event: ask participants to do pre-work",notes:PREWORK,due:(isValidDate(e.date)?addDays(e.date,-3):"")});
-      list.push({task:"Publicise on partner pages / external groups"});
-      list.push({task:"During event: Social media stories"});
-      list.push({task:"Feedback survey"});
+      if(isBWA) list.push({task:"3 days before event: ask participants to do pre-work",notes:PREWORK,due:(isValidDate(e.date)?addDays(e.date,-3):""),group:"Before"});
+      list.push({task:"Publicise on partner pages / external groups",group:"Before"});
+      list.push({task:"During event: Social media stories",group:"During"});
+      list.push({task:"Feedback survey",group:"During"});
       var socialTask=e.format==="Online"?"After event: post on socials":"After event: post on socials — mention The Working Capitol as event partner";
-      list.push({task:socialTask});
-      list.push({task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header\n• excel list of guest list\n• weblink of LinkedIn post"});
+      list.push({task:socialTask,group:"After"});
+      list.push({task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header\n• excel list of guest list\n• weblink of LinkedIn post",group:"After"});
       var have={}; e.tasks.forEach(function(t){have[nt(t.task)]=true;});
       list.forEach(function(it){
         if(have[nt(it.task)])return; have[nt(it.task)]=true; changed=true;
-        e.tasks.push({id:uid("t"),task:it.task,owner:"",status:"Not started",due:it.due||"",notes:it.notes||""});
+        e.tasks.push({id:uid("t"),task:it.task,owner:"",status:"Not started",due:it.due||"",notes:it.notes||"",group:it.group||"Before"});
       });
     });
     try{localStorage.setItem("events_tasks_preload_v1","1");}catch(e){}
@@ -965,9 +966,9 @@
     try{ if(localStorage.getItem("add_new_tasks_v1")) return; }catch(e){}
     function nt(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");}
     var NEW=[
-      {task:"During event: Social media stories"},
-      {task:"Feedback survey"},
-      {task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header\n• excel list of guest list\n• weblink of LinkedIn post"}
+      {task:"During event: Social media stories",group:"During"},
+      {task:"Feedback survey",group:"During"},
+      {task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header\n• excel list of guest list\n• weblink of LinkedIn post",group:"After"}
     ];
     var changed=false;
     events.forEach(function(e){
@@ -975,7 +976,7 @@
       var have={}; e.tasks.forEach(function(t){have[nt(t.task)]=true;});
       NEW.forEach(function(it){
         if(have[nt(it.task)]) return;
-        e.tasks.push({id:uid("t"),task:it.task,owner:"",status:"Not started",due:"",notes:it.notes||""});
+        e.tasks.push({id:uid("t"),task:it.task,owner:"",status:"Not started",due:"",notes:it.notes||"",group:it.group||"Before"});
         changed=true;
       });
     });
@@ -992,6 +993,23 @@
       });
     });
     try{localStorage.setItem("rename_poll_survey_v1","1");}catch(e){}
+    if(changed){ normalizeState(); saveNow(); }
+  }
+  // Assign Before/During/After groups to already-saved tasks based on task name patterns.
+  function assignTaskGroupsV1(){
+    try{ if(localStorage.getItem("assign_task_groups_v1")) return; }catch(e){}
+    var DURING=[/during event/i,/feedback survey/i,/social media stories/i];
+    var AFTER=[/after event/i,/send email to kai/i];
+    var changed=false;
+    events.concat(partners).forEach(function(e){
+      (e.tasks||[]).forEach(function(t){
+        var g="Before";
+        if(DURING.some(function(p){return p.test(t.task||"");})) g="During";
+        else if(AFTER.some(function(p){return p.test(t.task||"");})) g="After";
+        if(t.group!==g){ t.group=g; changed=true; }
+      });
+    });
+    try{localStorage.setItem("assign_task_groups_v1","1");}catch(e){}
     if(changed){ normalizeState(); saveNow(); }
   }
   // Fix already-preloaded Online events that have the TWC social task.
@@ -1342,7 +1360,9 @@
   function eventDateCell(x){var d=isValidDate(x.date)?x.date:"";var over=d && d<today() && isOpen(x);return '<div class="datewrap">'+(over?'<span class="odflag" title="Passed">⚠</span>':'')+'<input class="cellin cell-date'+(over?" overdue":"")+'" type="date" data-kind="event" data-id="'+esc(x.id)+'" data-f="date" value="'+d+'" title="'+(over?"Event date passed":"Event date")+'"></div>';}
   var TASKDEL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>';
   function tasksPanel(x){
-    var rows=(x.tasks||[]).map(function(t){
+    var GROUPS=["Before","During","After"];
+    var G_LABEL={"Before":"Before event","During":"During event","After":"After event"};
+    function taskRow(t){
       var st=STATUSES.map(function(s){return '<option'+(s.label===t.status?" selected":"")+'>'+esc(s.label)+'</option>';}).join("");
       var over=isValidDate(t.due)&&t.due<today()&&t.status!=="Done"&&t.status!=="On hold";
       return '<tr data-tid="'+esc(t.id)+'">'+
@@ -1353,10 +1373,18 @@
         '<td><textarea class="tk-notes celltxt" placeholder="Notes">'+esc(t.notes||"")+'</textarea></td>'+
         '<td style="width:64px;white-space:nowrap"><button class="taskgcal icon-btn gcalbtn" title="Add to Google Calendar (invites ria@ &amp; nicole@)" aria-label="Add task to Google Calendar">'+GCALSVG+'</button><button class="taskrm icon-btn" title="Remove task" aria-label="Remove task">'+TASKDEL+'</button></td>'+
       '</tr>';
-    }).join("");
-    var body=rows||'<tr><td colspan="6" class="novids">No tasks yet — add one below.</td></tr>';
-    return '<div class="vidpanel" data-eid="'+esc(x.id)+'"><table class="vids editvids"><thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Due</th><th>Notes</th><th></th></tr></thead><tbody>'+body+'</tbody></table>'+
-      '<button class="addtaskinline" data-eid="'+esc(x.id)+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add task</button></div>';
+    }
+    var html='<div class="vidpanel" data-eid="'+esc(x.id)+'">';
+    GROUPS.forEach(function(g){
+      var gtasks=(x.tasks||[]).filter(function(t){return (t.group||"Before")===g;});
+      var rows=gtasks.map(taskRow).join("");
+      var body=rows||'<tr><td colspan="6" class="novids">No tasks yet.</td></tr>';
+      html+='<div class="task-group-head">'+esc(G_LABEL[g])+'</div>'+
+        '<table class="vids editvids"><thead><tr><th>Task</th><th>Owner</th><th>Status</th><th>Due</th><th>Notes</th><th></th></tr></thead><tbody>'+body+'</tbody></table>'+
+        '<button class="addtaskinline" data-eid="'+esc(x.id)+'" data-group="'+g+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" style="width:13px;height:13px"><path d="M12 5v14M5 12h14"/></svg>Add task</button>';
+    });
+    html+='</div>';
+    return html;
   }
   var GCAL_GUESTS=["ria@hit-pay.com","nicole@hit-pay.com"];
   // Never invite the person clicking — they become the event organizer (so they can move,
@@ -1953,7 +1981,7 @@
     var prg=e.target.closest("[data-prgcal]");if(prg){var pe=prospects.filter(function(z){return z.id===prg.getAttribute("data-prgcal");})[0];if(pe){if(!(pe.name||"").trim()){toast("Add an event name first.",true);return;}window.open(gcalProspectUrl(pe),"_blank","noopener");}return;}
     var aei=e.target.closest(".addeventinline");if(aei){newEvent(aei.getAttribute("data-pid"));return;}
     var eo=e.target.closest("[data-eopen]");if(eo){var eoid=eo.getAttribute("data-eopen");view="events";filters={q:"",status:"",prio:"",country:"",owner:"",channel:""};expanded[eoid]=true;["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});render();setTimeout(function(){var b=document.querySelector('[data-exp="'+eoid+'"]');if(b){var tr=b.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},60);return;}
-    var at=e.target.closest(".addtaskinline");if(at){var aeid=at.getAttribute("data-eid");var ae=events.concat(partners).filter(function(z){return z.id===aeid;})[0];if(ae){ae.tasks=ae.tasks||[];ae.tasks.push({id:uid("t"),task:"",owner:"",status:"Not started",due:"",notes:""});stamp(ae);expanded[aeid]=true;saveAll();render();}return;}
+    var at=e.target.closest(".addtaskinline");if(at){var aeid=at.getAttribute("data-eid");var atg=at.getAttribute("data-group")||"Before";var ae=events.concat(partners).filter(function(z){return z.id===aeid;})[0];if(ae){ae.tasks=ae.tasks||[];ae.tasks.push({id:uid("t"),task:"",owner:"",status:"Not started",due:"",notes:"",group:atg});stamp(ae);expanded[aeid]=true;saveAll();render();}return;}
     var tgc=e.target.closest(".taskgcal");if(tgc){var ti=findET(tgc);if(ti.e&&ti.t){if(!(ti.t.task||"").trim()){toast("Add a task name first.",true);return;}window.open(gcalTaskUrl(ti.t,ti.e),"_blank","noopener");}return;}
     var trm=e.target.closest(".taskrm");if(trm){var tinfo=findET(trm);if(tinfo.e&&tinfo.t){tinfo.e.tasks=tinfo.e.tasks.filter(function(z){return z.id!==tinfo.t.id;});stamp(tinfo.e);saveAll();render();}return;}
     var ex=e.target.closest("[data-exp]");if(ex){var id=ex.getAttribute("data-exp");expanded[id]=!expanded[id];render();return;}
@@ -2061,7 +2089,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();renamePollToSurveyV1();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();renamePollToSurveyV1();assignTaskGroupsV1();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
