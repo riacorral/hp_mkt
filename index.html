@@ -947,9 +947,9 @@
       if(isBWA) list.push({task:"3 days before event: ask participants to do pre-work",notes:PREWORK,due:(isValidDate(e.date)?addDays(e.date,-3):"")});
       list.push({task:"Publicise on partner pages / external groups"});
       list.push({task:"During event: Social media stories"});
+      list.push({task:"Feedback survey"});
       var socialTask=e.format==="Online"?"After event: post on socials":"After event: post on socials — mention The Working Capitol as event partner";
       list.push({task:socialTask});
-      list.push({task:"Post-event poll"});
       list.push({task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header\n• excel list of guest list\n• weblink of LinkedIn post"});
       var have={}; e.tasks.forEach(function(t){have[nt(t.task)]=true;});
       list.forEach(function(it){
@@ -966,7 +966,7 @@
     function nt(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");}
     var NEW=[
       {task:"During event: Social media stories"},
-      {task:"Post-event poll"},
+      {task:"Feedback survey"},
       {task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header\n• excel list of guest list\n• weblink of LinkedIn post"}
     ];
     var changed=false;
@@ -980,6 +980,18 @@
       });
     });
     try{localStorage.setItem("add_new_tasks_v1","1");}catch(e){}
+    if(changed){ normalizeState(); saveNow(); }
+  }
+  // Rename "Post-event poll" → "Feedback survey" on any already-saved events.
+  function renamePollToSurveyV1(){
+    try{ if(localStorage.getItem("rename_poll_survey_v1")) return; }catch(e){}
+    var changed=false;
+    events.forEach(function(e){
+      (e.tasks||[]).forEach(function(t){
+        if(t.task==="Post-event poll"){ t.task="Feedback survey"; changed=true; }
+      });
+    });
+    try{localStorage.setItem("rename_poll_survey_v1","1");}catch(e){}
     if(changed){ normalizeState(); saveNow(); }
   }
   // Fix already-preloaded Online events that have the TWC social task.
@@ -2049,7 +2061,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();renamePollToSurveyV1();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
