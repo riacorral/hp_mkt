@@ -943,7 +943,7 @@
       var isBWA=/build\s*with\s*ai/i.test((e.event||"")+" "+partnerName(e.partnerId));
       var list=[
         {task:"Create Luma event page",group:"Before"},
-        {task:"Book venue with Kai",group:"Before"},
+        {task:"Book venue",group:"Before"},
         {task:"Book photographer",group:"Before"},
         {task:"Publicise on HitPay channels (LinkedIn, Socials, EDM)",group:"Before"}
       ];
@@ -1000,12 +1000,24 @@
     try{localStorage.setItem("rename_post_publicise_v1","1");}catch(e){}
     if(changed){ normalizeState(); saveNow(); }
   }
-  // Backfill "Book venue with Kai" and "Book photographer" onto already-saved events.
+  // Rename "Book venue with Kai" → "Book venue" on already-saved events.
+  function renameBookVenueV1(){
+    try{ if(localStorage.getItem("rename_book_venue_v1")) return; }catch(e){}
+    var changed=false;
+    events.concat(partners).forEach(function(e){
+      (e.tasks||[]).forEach(function(t){
+        if(t.task==="Book venue with Kai"){ t.task="Book venue"; changed=true; }
+      });
+    });
+    try{localStorage.setItem("rename_book_venue_v1","1");}catch(e){}
+    if(changed){ normalizeState(); saveNow(); }
+  }
+  // Backfill "Book venue" and "Book photographer" onto already-saved events.
   function addVenuePhotographerTasksV1(){
     try{ if(localStorage.getItem("add_venue_photo_tasks_v1")) return; }catch(e){}
     function nt(s){return String(s||"").toLowerCase().replace(/[^a-z0-9]/g,"");}
     var NEW=[
-      {task:"Book venue with Kai",group:"Before"},
+      {task:"Book venue",group:"Before"},
       {task:"Book photographer",group:"Before"}
     ];
     var changed=false;
@@ -2142,7 +2154,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();renamePollToSurveyV1();renamePostToPubliciseV1();fixKaiEmailNotesV1();addVenuePhotographerTasksV1();assignTaskGroupsV1();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();renamePollToSurveyV1();renamePostToPubliciseV1();fixKaiEmailNotesV1();addVenuePhotographerTasksV1();renameBookVenueV1();assignTaskGroupsV1();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
