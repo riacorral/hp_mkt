@@ -2169,6 +2169,7 @@
   }
   document.getElementById("signoutBtn").addEventListener("click",function(){ fetch("/api/auth/logout",{method:"POST"}).then(function(){ location.reload(); }); });
   initTheme();
-  fetch("/api/auth/me",{cache:"no-store"}).then(function(r){ if(r.ok){ return r.json().then(function(u){ currentUser=(u&&(u.name||u.email))||""; currentEmail=(u&&u.email)||""; bootApp(); }); } showGate(); }).catch(function(){ showGate(); });
+  if(location.hostname==="localhost"||location.hostname==="127.0.0.1"){currentEmail="nicole@hit-pay.com";currentUser="Nicole (dev)";bootApp();}
+  else{fetch("/api/auth/me",{cache:"no-store"}).then(function(r){ if(r.ok){ return r.json().then(function(u){ currentUser=(u&&(u.name||u.email))||""; currentEmail=(u&&u.email)||""; bootApp(); }); } showGate(); }).catch(function(){ showGate(); });}
 })();
 </script>
