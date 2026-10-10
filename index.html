@@ -951,7 +951,7 @@
       list.push({task:"Feedback survey",group:"During"});
       var socialTask=e.format==="Online"?"After event: post on socials":"After event: post on socials — mention The Working Capitol as event partner";
       list.push({task:socialTask,group:"After"});
-      list.push({task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header\n• excel list of guest list\n• weblink of LinkedIn post",group:"After"});
+      list.push({task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header. Include:\n• excel list of guest list\n• weblink of LinkedIn post",group:"After"});
       var have={}; e.tasks.forEach(function(t){have[nt(t.task)]=true;});
       list.forEach(function(it){
         if(have[nt(it.task)])return; have[nt(it.task)]=true; changed=true;
@@ -968,7 +968,7 @@
     var NEW=[
       {task:"During event: Social media stories",group:"During"},
       {task:"Feedback survey",group:"During"},
-      {task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header\n• excel list of guest list\n• weblink of LinkedIn post",group:"After"}
+      {task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header. Include:\n• excel list of guest list\n• weblink of LinkedIn post",group:"After"}
     ];
     var changed=false;
     events.forEach(function(e){
@@ -996,6 +996,21 @@
       });
     });
     try{localStorage.setItem("rename_post_publicise_v1","1");}catch(e){}
+    if(changed){ normalizeState(); saveNow(); }
+  }
+  // Fix notes on "Send email to Kai TWC" task — add "Include:" after header line.
+  function fixKaiEmailNotesV1(){
+    try{ if(localStorage.getItem("fix_kai_notes_v1")) return; }catch(e){}
+    var changed=false;
+    events.concat(partners).forEach(function(e){
+      (e.tasks||[]).forEach(function(t){
+        if(/send email to kai twc/i.test(t.task) && t.notes && !/Include:/i.test(t.notes)){
+          t.notes="Indicate Event Date in header. Include:\n• excel list of guest list\n• weblink of LinkedIn post";
+          changed=true;
+        }
+      });
+    });
+    try{localStorage.setItem("fix_kai_notes_v1","1");}catch(e){}
     if(changed){ normalizeState(); saveNow(); }
   }
   // Rename "Post-event poll" → "Feedback survey" on any already-saved events.
@@ -2104,7 +2119,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();renamePollToSurveyV1();renamePostToPubliciseV1();assignTaskGroupsV1();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();addNewTasksV1();renamePollToSurveyV1();renamePostToPubliciseV1();fixKaiEmailNotesV1();assignTaskGroupsV1();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
