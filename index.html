@@ -1124,8 +1124,14 @@
     try{localStorage.setItem("prospects_seeded_v1","1");}catch(e){}
     normalizeState(); saveNow(); return true;
   }
+  var IS_DEV=location.hostname==="localhost"||location.hostname==="127.0.0.1";
+  var LS_DEV_KEY="hpmkt_dev_data";
   function applyServer(st){ items=Array.isArray(st.items)?st.items:[]; merch=Array.isArray(st.merch)?st.merch:[]; bugs=Array.isArray(st.bugs)?st.bugs:[]; events=Array.isArray(st.events)?st.events:[]; partners=Array.isArray(st.partners)?st.partners:[]; content=Array.isArray(st.content)?st.content:[]; prospects=Array.isArray(st.prospects)?st.prospects:[]; etEvents=Array.isArray(st.etEvents)?st.etEvents:[]; etLeads=Array.isArray(st.etLeads)?st.etLeads:[]; if(typeof st.rev==="number")serverRev=st.rev; normalizeState(); }
   function loadAll(done){
+    if(IS_DEV){
+      try{ var raw=localStorage.getItem(LS_DEV_KEY); if(raw){ applyServer(JSON.parse(raw)); } else { var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; events=s.events; partners=s.partners; content=s.content; normalizeState(); } }catch(e){ var s=buildSeed(); items=s.items; merch=s.merch; bugs=s.bugs; events=s.events; partners=s.partners; content=s.content; normalizeState(); }
+      if(done)done(); return;
+    }
     fetch(API,{cache:"no-store"}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(st){
       if(st===null) return;
       lastSync=Date.now();
@@ -1136,11 +1142,16 @@
   }
   function saveNow(){
     lastMutation=Date.now();
+    if(IS_DEV){
+      try{ localStorage.setItem(LS_DEV_KEY,JSON.stringify({items:items,merch:merch,bugs:bugs,events:events,partners:partners,content:content,prospects:prospects,etEvents:etEvents,etLeads:etLeads})); }catch(e){}
+      return Promise.resolve();
+    }
     return fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({items:items,merch:merch,bugs:bugs,events:events,partners:partners,content:content,prospects:prospects,etEvents:etEvents,etLeads:etLeads})}).then(function(r){if(r.status===401){showGate();return null;}return r.json();}).then(function(res){ if(res){ lastSync=Date.now(); if(typeof res.rev==="number")serverRev=res.rev; } }).catch(function(){ toast("Save failed — check your connection.",true); });
   }
   function saveAll(){ lastMutation=Date.now(); if(saveTimer)clearTimeout(saveTimer); saveTimer=setTimeout(function(){saveTimer=null;saveNow();},350); }
   function isBusyUI(){ if(document.querySelector(".overlay.open"))return true; if(document.querySelector(".chanpop.open"))return true; var a=document.activeElement; if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName))return true; return saveTimer!==null; }
   function poll(){
+    if(IS_DEV)return;
     if(document.hidden)return;
     if(isBusyUI())return;
     if(Date.now()-lastMutation<7000)return;
