@@ -946,7 +946,8 @@
       ];
       if(isBWA) list.push({task:"3 days before event: ask participants to do pre-work",notes:PREWORK,due:(isValidDate(e.date)?addDays(e.date,-3):"")});
       list.push({task:"Publicise on partner pages / external groups"});
-      list.push({task:"After event: post on socials — mention The Working Capitol as event partner"});
+      var socialTask=e.format==="Online"?"After event: post on socials":"After event: post on socials — mention The Working Capitol as event partner";
+      list.push({task:socialTask});
       var have={}; e.tasks.forEach(function(t){have[nt(t.task)]=true;});
       list.forEach(function(it){
         if(have[nt(it.task)])return; have[nt(it.task)]=true; changed=true;
@@ -954,6 +955,22 @@
       });
     });
     try{localStorage.setItem("events_tasks_preload_v1","1");}catch(e){}
+    if(changed){ normalizeState(); saveNow(); }
+  }
+  // Fix already-preloaded Online events that have the TWC social task.
+  function fixOnlineEventTasksV1(){
+    try{ if(localStorage.getItem("fix_online_tasks_v1")) return; }catch(e){}
+    var changed=false;
+    events.forEach(function(e){
+      if(e.format!=="Online") return;
+      (e.tasks||[]).forEach(function(t){
+        if(/mention The Working Capitol as event partner/i.test(t.task)){
+          t.task="After event: post on socials";
+          changed=true;
+        }
+      });
+    });
+    try{localStorage.setItem("fix_online_tasks_v1","1");}catch(e){}
     if(changed){ normalizeState(); saveNow(); }
   }
   // One-time re-tag of event TYPE to the simplified set (Shoot/Expo/Event/Task/Maybe/Other).
@@ -2007,7 +2024,7 @@
   var booted=false;
   function hideGate(){document.getElementById("authGate").classList.remove("open");}
   function startPolling(){ if(booted)return; booted=true; setInterval(poll,8000); document.addEventListener("visibilitychange",function(){if(!document.hidden)poll();}); updateSyncLabel(); syncTimer=setInterval(updateSyncLabel,1000); }
-  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();refreshOptions();render();renderBugs();}); startPolling(); }
+  function bootApp(){ hideGate(); document.getElementById("signoutBtn").style.display=""; refreshOptions(); render(); renderBugs(); loadAll(function(){importProspects();importEventTracker();enrichProspectsFromET();syncHunterV2();retagEventTypesV1();preloadEventTasks();fixOnlineEventTasksV1();refreshOptions();render();renderBugs();}); startPolling(); }
   function initGIS(){
     if(!(window.google&&google.accounts&&google.accounts.id)){ setTimeout(initGIS,200); return; }
     var box=document.getElementById("gbtn"); if(box.childElementCount) return;
