@@ -1712,6 +1712,10 @@
       fm.style.display=isEvents?"":"none"; fc.style.display="none";
       if(isEvents){
         var seen={}, mlist=[];
+        // Always include current month + 5 future months
+        var _now=new Date();
+        for(var _i=0;_i<6;_i++){ var _d=new Date(_now.getFullYear(),_now.getMonth()+_i,1); var _ym=_d.getFullYear()+"-"+pad2(_d.getMonth()+1); if(!seen[_ym]){seen[_ym]=true;mlist.push(_ym);} }
+        // Add any past months that have events
         events.forEach(function(e){ if(isValidDate(e.date)){ var ym=e.date.slice(0,7); if(!seen[ym]){seen[ym]=true;mlist.push(ym);} } });
         mlist.sort();
         var cur=filters.month||"", prev=fm.value;
