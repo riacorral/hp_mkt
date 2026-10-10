@@ -1959,7 +1959,27 @@
     saveAll();refreshOptions();render();closeMerch();
   }
   function delMerch(id){var x=mcById(id);if(!x)return;var isC=content.indexOf(x)>=0;askConfirm("Delete this "+(isC?"content item":"merchant")+" and its videos?",'"'+(x.merchant||"Untitled")+'"',function(){merch=merch.filter(function(m){return m.id!==id;});content=content.filter(function(m){return m.id!==id;});events.forEach(function(e){if(e.contentId===id)e.contentId="";});delete expanded[id];saveAll();refreshOptions();render();toast((isC?"Content":"Merchant")+" deleted");},{danger:true,okLabel:"Delete"});}
-  function newEvent(partnerId){view="events";filters={q:"",status:defaultStatus("events"),prio:"",country:"",owner:"",channel:""};["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});var e={id:uid("ev"),event:"",owner:"",priority:"Medium",status:"Not started",etype:"",format:"",date:"",country:"",notes:"",info:"",partnerId:partnerId||"",tasks:[],added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};events.unshift(e);expanded[e.id]=true;saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="event"][data-id="'+e.id+'"]');if(ta){ta.focus();var tr=ta.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},50);}
+  function defaultEventTasks(e){
+    function addDays(ds,n){var d=new Date(ds+"T00:00:00");d.setDate(d.getDate()+n);return fmtDate(d.getFullYear(),d.getMonth(),d.getDate());}
+    function pname(id){var p=partners.filter(function(z){return z.id===id;})[0];return p?(p.partner||""):"";}
+    var PREWORK="https://app.notion.com/p/hitpay/Build-with-AI-x-HitPay-Workshop-Pre-Session-Setup-3ad0a0076da080939c6fc87efea42300";
+    var isBWA=/build\s*with\s*ai/i.test((e.event||"")+" "+pname(e.partnerId));
+    var list=[
+      {task:"Create Luma event page",group:"Before"},
+      {task:"Book venue",group:"Before"},
+      {task:"Book photographer",group:"Before"},
+      {task:"Publicise on HitPay channels (LinkedIn, Socials, EDM)",group:"Before"}
+    ];
+    if(isBWA) list.push({task:"3 days before event: ask participants to do pre-work",notes:PREWORK,due:(isValidDate(e.date)?addDays(e.date,-3):""),group:"Before"});
+    list.push({task:"Publicise on partner pages / external groups",group:"Before"});
+    list.push({task:"During event: Social media stories",group:"During"});
+    list.push({task:"Feedback survey",group:"During"});
+    var socialTask=e.format==="Online"?"After event: post on socials":"After event: post on socials — mention The Working Capitol as event partner";
+    list.push({task:socialTask,group:"After"});
+    list.push({task:"Send email to Kai TWC after event",notes:"Indicate Event Date in header. Include:\n• excel list of guest list\n• weblink of LinkedIn post",group:"After"});
+    return list.map(function(it){return {id:uid("t"),task:it.task,owner:"",status:"Not started",due:it.due||"",notes:it.notes||"",group:it.group||"Before"};});
+  }
+  function newEvent(partnerId){view="events";filters={q:"",status:defaultStatus("events"),prio:"",country:"",owner:"",channel:""};["search","fPrio","fCountry","fOwner","fChannel"].forEach(function(idv){var el=document.getElementById(idv);if(el)el.value="";});var e={id:uid("ev"),event:"",owner:"",priority:"Medium",status:"Not started",etype:"",format:"",date:"",country:"",notes:"",info:"",partnerId:partnerId||"",tasks:defaultEventTasks({event:"",format:"",date:"",partnerId:partnerId||""}),added:today(),updated:today(),addedBy:currentUser,updatedBy:currentUser};events.unshift(e);expanded[e.id]=true;saveAll();refreshOptions();render();setTimeout(function(){var ta=document.querySelector('#rows textarea.cell-title[data-kind="event"][data-id="'+e.id+'"]');if(ta){ta.focus();var tr=ta.closest("tr");if(tr&&tr.scrollIntoView)tr.scrollIntoView({behavior:"smooth",block:"center"});}},50);}
   function delEvent(id){var x=events.filter(function(e){return e.id===id;})[0];if(!x)return;askConfirm("Delete this event and its tasks?",'"'+(x.event||"Untitled event")+'"',function(){events=events.filter(function(e){return e.id!==id;});delete expanded[id];saveAll();refreshOptions();render();toast("Event deleted");},{danger:true,okLabel:"Delete"});}
 
   // ---- export / import ----
