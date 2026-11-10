@@ -1768,7 +1768,7 @@
     if(it.kind==="event"){var t=String(it.etype||"");return (t==="Expo")?"expo":(t==="Shoot")?"shoot":(t==="Event")?"event":(t==="Task")?"task":(t==="Maybe")?"maybe":"other";}
     return "other";
   }
-  function calPrimaryVisible(it){ if(calPrimary==="all")return true; var b=calItemBucket(it); if(b==="task"||b==="maybe"||b==="other")return true; return b===calPrimary; }
+  function calPrimaryVisible(it){ if(calPrimary==="all")return true; return calItemBucket(it)===calPrimary; }
   function renderCalSeg(){var seg=document.getElementById("calTypeSeg");if(!seg)return;var btns=seg.querySelectorAll(".calsegbtn");for(var i=0;i<btns.length;i++){btns[i].classList.toggle("active",btns[i].getAttribute("data-ptype")===calPrimary);}}
   (function(){var d=new Date(); calY=d.getFullYear(); calM=d.getMonth();})();
   var MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
